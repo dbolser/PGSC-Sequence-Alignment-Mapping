@@ -38,7 +38,6 @@ sed -ri 's/\s+/\t/g' $RESULTS
 
 
 ## REMOVE ALIGNMENTS INVOLVING REPEATS.
-## This step removes a massive number of alignments!
 
 DF=~/BiO/Util/depth_filter.plx
 
@@ -47,16 +46,86 @@ $DF -t query -d 5 -c .80 \
 > $RESULTS.dfilt.q.d5.c80
 
 
+## This step removes a massive number of alignments!
+wc -l $RESULTS                  # 5912272
+wc -l $RESULTS.dfilt.q.d5.c80   #  198463
 
 
 
-## Just make a GFF
+## Just make a GFF...
+
+## First, get a (convenience) list of BES that were permanantly
+## removed due to their repetative nature (this list is used when
+## creating the GFF).
+
+./list_filt_bes.plx > filt_bes.list
+
+
 
 ./to_gff.plx \
   $RESULTS.dfilt.q.d5.c80 \
-> GFF/`basename $RESULTS`.dfilt.q.d5.c80.gff3
+> GFF/`basename $RESULTS`.dfilt.q.d5.c80.gff
 
 
-wc -l GFF/`basename $RESULTS`.gff3
+wc -l GFF/`basename $RESULTS`.dfilt.q.d5.c80.gff
+
+
+
+## Load it into GB?
+
+## FAILS... 
+bp_seqfeature_delete.pl --dry-run \
+  --dsn dbi:mysql:www-potato:mysql.compbio.dundee.ac.uk \
+  --user www-potato \
+  --pass abc123 \
+  -t "BAC*" "BES*" | head
+
+
+
+## Load everything from scratch?
+bp_seqfeature_load.pl -c -f -v -z \
+  --summary \
+  --dsn dbi:mysql:www-potato:mysql.compbio.dundee.ac.uk \
+  --user www-potato \
+  --pass abc123 \
+GFF/PGSC0003DMB.gaps.gff \
+GFF/PGSC0003DMB.scaffold.gff \
+GFF/dm.map.gff \
+GFF/tom.map.gff \
+GFF/wgp.map.gff \
+GFF/breaks.gff \
+GFF/align-S_lycopersicum_chromosomes.2.10.fa-PGSC0003DMB.gff \
+GFF/PGSC0003DMB_vs_Solanum_phureja_DM.bac_ends.09242009.ssaha.dfilt.q.d5.c80.v2.gff
+
+
+
+
+
+## NOTE!
+
+From the 85,110 DM BACs, there are 170,220 BES (in theory). 
+
+We have sequences for 156,485 BES, i.e. 13,735 or 8% are 'missing'.
+
+Of these 156,485 BES:
+We have alignments for 153,361 BES, i.e. 3,124 or 2% fail to align.
+
+After filtering:
+We have alignments for 127,601 BES, i.e. 25,760 or 17% are rejected.
+
+
+The total drop off is 42,619 BES or 25% of the ideal 170,220.
+
+
+
+
+## NOTE! 
+
+Initially, I processed 'hits' from best to worst, allowing a 'bad
+pair' to be skipped over if a lower scoring 'good pair' could be
+found. In total, only 997 lower scoring 'good pairs' could be found
+after the best scoring 'bad pair'. This is just 3% of the 'good pairs'
+(997), and, because they considerable complicate processing, they are
+now simply discarded.
 
 
