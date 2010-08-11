@@ -1,0 +1,62 @@
+
+## SSAHA
+
+## QUERY (FASTA)
+QUERY=Data/Solanum_phureja_DM.bac_ends.09242009.fsa
+
+## TARGET (SSAHA INDEX)
+TARGET=../Assembly/PGSC0003DM/Indexes/PGSC0003DMB.sanger
+
+
+
+## OUTPUT
+
+## Version 3.0
+RESULTS=../Results/`basename $TARGET .sanger`_vs_`basename $QUERY .fsa`.ssaha
+
+
+
+## RUN
+
+SSAHA=/sw/local/src/dbolser/SSAHA/ssaha2
+
+$SSAHA -tags 0 \
+ -save $TARGET $QUERY \
+ | perl -ne '
+     print if /^\d/
+   ' \
+ > $RESULTS
+
+
+
+## Replace the whitespace field terminators with tabs
+
+sed -ri 's/\s+/\t/g' $RESULTS
+
+
+
+
+
+## REMOVE ALIGNMENTS INVOLVING REPEATS.
+## This step removes a massive number of alignments!
+
+DF=~/BiO/Util/depth_filter.plx
+
+$DF -t query -d 5 -c .80 \
+  $RESULTS \
+> $RESULTS.dfilt.q.d5.c80
+
+
+
+
+
+## Just make a GFF
+
+./to_gff.plx \
+  $RESULTS.dfilt.q.d5.c80 \
+> GFF/`basename $RESULTS`.dfilt.q.d5.c80.gff3
+
+
+wc -l GFF/`basename $RESULTS`.gff3
+
+
