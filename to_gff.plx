@@ -222,7 +222,7 @@ foreach my $clone (keys %sequence_pairs){
 	print "I:\tdistance is $bes_distance\n"
 	  if $verbose > 0;
 	
-	if ($bes_distance < 5000){
+	if ($bes_distance < 5_000){
 	  ## Debugging
 	  print "W:\treally incorrect orientation\n"
 	    if $verbose > 0;
@@ -264,7 +264,7 @@ foreach my $clone (keys %sequence_pairs){
 	print "I:\tdistance is $bes_distance\n"
 	  if $verbose > 0;
 	
-	if ($bes_distance < 1000){
+	if ($bes_distance < 5_000){
 	  ## Debugging
 	  print "W:\treally incorrect orientation\n"
 	    if $verbose > 0;
