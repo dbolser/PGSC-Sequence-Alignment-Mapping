@@ -18,7 +18,7 @@ die "pass ssaha file\n"
 
 
 ## Set to 1 to enable debugging output
-my $verbose = 1;
+my $verbose = 0;
 
 
 
@@ -407,3 +407,4 @@ sub hits_by_score {
     # ident
     $b->[9] <=> $a->[9];
 }
+
