@@ -45,10 +45,26 @@ $DF -t query -d 5 -c .80 \
   $RESULTS \
 > $RESULTS.dfilt.q.d5.c80
 
-
 ## This step removes a massive number of alignments!
 wc -l $RESULTS                  # 5912272
 wc -l $RESULTS.dfilt.q.d5.c80   #  198463
+
+
+
+## Above we use settings such that query sequecnes (BES) with multiple
+## alignments to the target sequence are removed (or sub-alignments
+## thereof). However, Some 'unique' pieces of the genome attract many
+## query sequences. These artifacts are seen across BES, FES and 20kb
+## 454 PE alignments, and should therefore be removed.
+
+$DF -t hit   -d 5 -c .80 \
+  $RESULTS.dfilt.q.d5.c80 \
+> $RESULTS.dfilt.b.d5.c80
+
+## This step removes a substantial number of alignments
+wc -l $RESULTS.dfilt.b.d5.c80   #  134891
+
+
 
 
 
@@ -63,45 +79,22 @@ wc -l $RESULTS.dfilt.q.d5.c80   #  198463
 
 
 ./to_gff.plx \
-  $RESULTS.dfilt.q.d5.c80 \
-> GFF/`basename $RESULTS`.dfilt.q.d5.c80.gff
+  $RESULTS.dfilt.b.d5.c80 \
+> GFF/`basename $RESULTS`.dfilt.b.d5.c80.gff
 
-
-wc -l GFF/`basename $RESULTS`.dfilt.q.d5.c80.gff
+wc -l GFF/`basename $RESULTS`.dfilt.b.d5.c80.gff
 
 
 
 ## Load it into GB?
 
-## FAILS... 
-bp_seqfeature_delete.pl --dry-run \
-  --dsn dbi:mysql:www-potato:mysql.compbio.dundee.ac.uk \
-  --user www-potato \
-  --pass abc123 \
-  -t "BAC*" "BES*" | head
-
-
-
-## Load everything from scratch?
-bp_seqfeature_load.pl -c -f -v -z \
-  --summary \
-  --dsn dbi:mysql:www-potato:mysql.compbio.dundee.ac.uk \
-  --user www-potato \
-  --pass abc123 \
-GFF/PGSC0003DMB.gaps.gff \
-GFF/PGSC0003DMB.scaffold.gff \
-GFF/dm.map.gff \
-GFF/tom.map.gff \
-GFF/wgp.map.gff \
-GFF/breaks.gff \
-GFF/align-S_lycopersicum_chromosomes.2.10.fa-PGSC0003DMB.gff \
-GFF/PGSC0003DMB_vs_Solanum_phureja_DM.bac_ends.09242009.ssaha.dfilt.q.d5.c80.v2.gff
+## See ../NOTES
 
 
 
 
 
-## NOTE!
+## NOTE! (out of date, doesn't include HIT repeat filter)
 
 From the 85,110 DM BACs, there are 170,220 BES (in theory). 
 
