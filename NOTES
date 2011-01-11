@@ -1,27 +1,66 @@
 
 ## SSAHA
 
+
+
 ## QUERY (FASTA)
-QUERY=Data/Solanum_phureja_DM.bac_ends.09242009.fsa
+#QUERY=Data/Solanum_phureja_DM.bac_ends.09242009.fsa
+QUERY=test.fsa
 
-## TARGET (SSAHA INDEX)
-TARGET=../Assembly/PGSC0003DM/Indexes/PGSC0003DMB.sanger
+## Assembly
+ASSDIR=Assembly/PGSC0003DM
+
+## ASSEMBLY (SEQUENCE)
+#ASSEMBLY=$ASSDIR/PGSC0003DMB.fa
+ASSEMBLY=$ASSDIR/PGSC0003DMB.kfilt.19.50.fa
+
+## ASSEMBLY (INDEX)
+SSAHAIDX=$ASSDIR/Indexes/SSAHA2/`basename $ASSEMBLY .fa`.sanger
+
+## OUT
+RESULTS=Results/`basename $ASSEMBLY .fa`_vs_`basename $QUERY .fsa`.ssaha
+
+## TOOLS
+SSAHA_B=/sw/local/src/dbolser/SSAHA/ssaha2Build
+SSAHA_R=/sw/local/src/dbolser/SSAHA/ssaha2
 
 
 
-## OUTPUT
-
-## Version 3.0
-RESULTS=../Results/`basename $TARGET .sanger`_vs_`basename $QUERY .fsa`.ssaha
 
 
+## TEST! NB: We create the index below, if it doesn't exist here:
 
-## RUN
+ls \
+  $QUERY \
+  $ASSEMBLY \
+  $SSAHAIDX.size \
+  $RESULTS \
+  $SSAHA_B \
+  $SSAHA_R
 
-SSAHA=/sw/local/src/dbolser/SSAHA/ssaha2
 
-$SSAHA -tags 0 \
- -save $TARGET $QUERY \
+
+
+
+## Step 1) Index the assembly for SSAHA2 searching
+
+# $SSAHA_B \
+#  -save $SSAHAIDX \
+#        $ASSEMBLY
+
+
+
+
+
+## Step 2) Run the QUERY sequences against the ASSEMBLY
+
+## Testing
+$SSAHA_R -output sam \
+ -save $SSAHAIDX $QUERY \
+ > $RESULTS.sam
+
+$SSAHA_R -tags 0 \
+ -save $SSAHAIDX $QUERY \
  | perl -ne '
      print if /^\d/
    ' \
