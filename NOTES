@@ -111,7 +111,7 @@ wc -l $RESULTS.dfilt.b.d5.c80   #  134891
 
 ## First, get a (convenience) list of BES that were permanantly
 ## removed due to their repetative nature (this list is used when
-## creating the GFF).
+## creating the GFF to annotate unpaired ends).
 
 ./list_filt_bes.plx > filt_bes.list
 
