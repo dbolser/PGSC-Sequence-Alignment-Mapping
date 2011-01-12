@@ -144,21 +144,14 @@ wc -l $RESULTS.dfilt.b2.d5.c80  #  134891
 
 ## Just make a GFF...
 
-## First, get a (convenience) list of BES that were permanantly
-## removed due to their repetative nature (this list is used when
-## creating the GFF to annotate unpaired ends).
-
-## See inside
-./list_filt_bes.plx > filt_bes.dfilt.b.d3.c80.list
-
-
-
 ## See inside
 ./to_gff.plx \
   $RESULTS.dfilt.b.d5.c80 \
 > GFF/`basename $RESULTS`.dfilt.b.d5.c80.gff
 
 wc -l GFF/`basename $RESULTS`.dfilt.b.d5.c80.gff
+
+
 
 
 

@@ -4,9 +4,10 @@ use strict;
 
 =head1 DESCRIPTION
 
-Thsi script produces GFF from BES alignments. It uses a specific
-regexp to match one end to another, and doesn't check the BES
-separation distance on the target sequence.
+This script produces GFF from BES alignments (SSAHA2 format). It uses
+a specific regexp to match one end to another, and uses a BES sequence
+specific data table to construct the GFF. The script removes very
+short or very long pairs, so they will never be seen!
 
 =cut
 
@@ -22,9 +23,9 @@ my $verbose = 0;
 
 
 
-## Read in the sequence data table so that we can match the sequence
-## identifier in the alignment file to the more informative sequence
-## header (parsed into the table elsewhere).
+## Read in the BES specif sequence data table so that we can match the
+## sequence identifier in the alignment file to the more informative
+## sequence header (the header is parsed into a table elsewhere).
 
 ## At this stage, we also construct the BES pairs for a BAC (clone)
 
@@ -93,36 +94,14 @@ warn "got $hit_counter hits for ",
 
 
 
-## Additionally we read in a list of BES that get filtered
-
-warn "\nparsing filtered list\n";
-
-my $filt_list_file = "filt_bes.dfilt.b.d3.c80.list";
-
-open F, '<', $filt_list_file
-  or die "failed to open $filt_list_file : $! \n";
-
-my %filt_list;
-
-while(<F>){
-  chomp;
-  $filt_list{$_}++
-}
-
-warn "got ", scalar keys %filt_list, "\n";
 
 
 
 
-
-
-
-## Produce the GFF, paired and all
+## Produce the GFF
 
 warn "\ndumping GFF\n";
 
-
-CLONE:
 foreach my $clone (keys %sequence_pairs){
   
   ## Really debugging
@@ -145,26 +124,9 @@ foreach my $clone (keys %sequence_pairs){
   print "G:\t$gi2\t", scalar(@hits2), "\n"
     if $verbose > 0;
   
-  
-  
-  
-  
-  ## Create some failure flags?
-  my ($missing_f, $rep_f, $ali_f) = (0, 0, 0);
-  
-  if ($gi1 eq 'seq missing' ||
-      $gi2 eq 'seq missing'){
-    $missing_f++;
-  }
-  
-  if (@hits1 == 0){
-    exists( $filt_list{ $gi1 } ) ? $rep_f++ : $ali_f++;
-  }
-  if (@hits2 == 0){
-    exists( $filt_list{ $gi2 } ) ? $rep_f++ : $ali_f++;
-  }
-  
-  ## OK
+  ## Hits for both ends?
+  next unless exists($hits{$gi1});
+  next unless exists($hits{$gi2});
   
   
   
@@ -174,150 +136,119 @@ foreach my $clone (keys %sequence_pairs){
   
   ## NOTE: if the best hits don't form a 'good pair', we give up on
   ## the clone.
-
+  
   ## NOTE: about 3% of the clones could be 'recovered' by hunting for
   ## a lower scoring 'good pair', however, their quality is dubious,
   ## and they are complex to handle! We skip them here.
   
-  my ($scaff_f, $ori_f, $short_f, $long_f) = (0, 0, 0, 0);
+  my $hit1 = (sort hits_by_score @hits1)[0]; # Remeber 1 = TP = forward
+  my $hit2 = (sort hits_by_score @hits2)[0]; # Remeber 2 = TV = reverse
   
- HIT:
-  for my $hit1 (sort hits_by_score @hits1){
-    for my $hit2 (sort hits_by_score @hits2){
-      
-      my ($sc1, $qn1, $hn1,  $qs1, $qe1, $hs1, $he1, $st1,
-	  $al1, $nt1, $ql1) = @$hit1;
-      my ($sc2, $qn2, $hn2,  $qs2, $qe2, $hs2, $he2, $st2,
-	  $al2, $nt2, $ql2) = @$hit2;
-      
-      ## Debugging
-      print join("\t", '1:', @$hit1), "\n"
-	if $verbose > 0;
-      print join("\t", '2:', @$hit2), "\n"
-	if $verbose > 0;
-      
-      ## Check they hit the same scaffold
-      if ($hn1 ne $hn2){
+  my ($sc1, $qn1, $hn1,  $qs1, $qe1, $hs1, $he1, $st1,
+      $al1, $nt1, $ql1) = @$hit1;
+  my ($sc2, $qn2, $hn2,  $qs2, $qe2, $hs2, $he2, $st2,
+      $al2, $nt2, $ql2) = @$hit2;
+  
+  ## Debugging
+  print join("\t", '1:', @$hit1), "\n"
+    if $verbose > 0;
+  print join("\t", '2:', @$hit2), "\n"
+    if $verbose > 0;
+  
+  
+  
+  ## Check they hit the same scaffold (if not they must span a pair of
+  ## scaffolds)
+  
+  if ($hn1 eq $hn2){
+    
+    ## Check orientation 1/2
+    if ($st1 eq 'F'){
+      if ($st2 ne 'C'){
 	## Debugging
-	print "W:\tnot on the same scaffold\n"
+	print "W:\tincorrect orientation\n"
 	  if $verbose > 0;
-	$scaff_f++;
-	last HIT;
+	next;
       }
       
-      ## Check orientation 1/2
-      if ($st1 eq 'F'){
-	if ($st2 ne 'C'){
-	  ## Debugging
-	  print "W:\tincorrect orientation\n"
-	    if $verbose > 0;
-	  $ori_f++;
-	  last HIT;
-	}
-	
-	## OK. Check their distance
-	my $bes_distance = $he2 - $hs1 + 1;
-	print "I:\tdistance is $bes_distance\n"
+      ## OK. Check their distance
+      my $bes_distance = $he2 - $hs1 + 1;
+      print "I:\tdistance is $bes_distance\n"
+	if $verbose > 0;
+      
+      if ($bes_distance < 5_000){
+	## Debugging
+	print "W:\tincorrect orientation\n"
 	  if $verbose > 0;
-	
-	if ($bes_distance < 5_000){
-	  ## Debugging
-	  print "W:\treally incorrect orientation\n"
-	    if $verbose > 0;
-	  $short_f++;
-	  last HIT;
-	}
-	
-	if ($bes_distance > 400_000){
-	  ## Debugging
-	  print "W:\ttoo long!\n"
-	    if $verbose > 0;
-	  $long_f++;
-	  last HIT;
-	}
-	
-	## OK! Print three lines of GFF
-	print join("\t", $hn1, 'dundee', 'BAC', $hs1, $he2,  '.', '+', '.', "ID=$clone;Name=$clone"), "\n";
-	print join("\t", $hn1, 'dundee', 'BES', $hs1, $he1, $sc1, '+', '.', "ID=$gi1;Parent=$clone;Note=TP"), "\n";
-	print join("\t", $hn1, 'dundee', 'BES', $hs2, $he2, $sc2, '-', '.', "ID=$gi2;Parent=$clone;Note=TV"), "\n";
-	
-	## DONE!
-	next CLONE;
+	  next;
       }
       
-      
-      
-      ## Check orientation 2/2
-      if ($st1 eq 'C'){
-	if ($st2 ne 'F'){
-	  ## Debugging
-	  print "W:\tincorrect orientation\n"
-	    if $verbose > 0;
-	  $ori_f++;
-	  last HIT;
-	}
-	
-	## OK. Check their distance
-	my $bes_distance = $he1 - $hs2 + 1;
-	print "I:\tdistance is $bes_distance\n"
+      if ($bes_distance > 500_000){
+	## Debugging
+	print "W:\ttoo long!\n"
 	  if $verbose > 0;
-	
-	if ($bes_distance < 5_000){
-	  ## Debugging
-	  print "W:\treally incorrect orientation\n"
-	    if $verbose > 0;
-	  $short_f++;
-	  last HIT;
-	}
-	
-	if ($bes_distance > 400_000){
-	  ## Debugging
-	  print "W:\ttoo long!\n"
-	    if $verbose > 0;
-	  $long_f++;
-	  last HIT;
-	}
-	
-	## OK! Print three lines of GFF
-	print join("\t", $hn1, 'dundee', 'BAC', $hs2, $he1,  '.', '-', '.', "ID=$clone;Name=$clone"), "\n";
-	print join("\t", $hn1, 'dundee', 'BES', $hs1, $he1, $sc1, '-', '.', "ID=$gi1;Parent=$clone;Note=TP"), "\n";
-	print join("\t", $hn1, 'dundee', 'BES', $hs2, $he2, $sc2, '+', '.', "ID=$gi2;Parent=$clone;Note=TV"), "\n";
-	
-	## DONE!
-	next CLONE;
+	next;
       }
       
+      ## OK! Print three lines of GFF
+      print join("\t", $hn1, 'dundee', 'BAC', $hs1, $he2,  '.', '+', '.', "ID=$clone;Name=$clone"), "\n";
+      print join("\t", $hn1, 'dundee', 'BES', $hs1, $he1, $sc1, '+', '.', "ID=$gi1;Parent=$clone;Note=TP"), "\n";
+      print join("\t", $hn1, 'dundee', 'BES', $hs2, $he2, $sc2, '-', '.', "ID=$gi2;Parent=$clone;Note=TV"), "\n";
+      
+      ## DONE!
+      next;
+    }
+    
+    
+    
+    ## Check orientation 2/2
+    if ($st1 eq 'C'){
+      if ($st2 ne 'F'){
+	## Debugging
+	print "W:\tincorrect orientation\n"
+	  if $verbose > 0;
+	next;
+      }
+      
+      ## OK. Check their distance
+      my $bes_distance = $he1 - $hs2 + 1;
+      print "I:\tdistance is $bes_distance\n"
+	if $verbose > 0;
+      
+      if ($bes_distance < 5_000){
+	## Debugging
+	print "W:\tincorrect orientation\n"
+	  if $verbose > 0;
+	next;
+      }
+      
+      if ($bes_distance > 500_000){
+	## Debugging
+	print "W:\ttoo long!\n"
+	  if $verbose > 0;
+	next;
+      }
+      
+      ## OK! Print three lines of GFF
+      print join("\t", $hn1, 'dundee', 'BAC', $hs2, $he1,  '.', '-', '.', "ID=$clone;Name=$clone"), "\n";
+      print join("\t", $hn1, 'dundee', 'BES', $hs1, $he1, $sc1, '-', '.', "ID=$gi1;Parent=$clone;Note=TP"), "\n";
+      print join("\t", $hn1, 'dundee', 'BES', $hs2, $he2, $sc2, '+', '.', "ID=$gi2;Parent=$clone;Note=TV"), "\n";
+      
+      ## DONE!
+      next;
     }
   }
   
   
   
+  ## Nothing paired, falling through to single end printer
   
-  
-  
-  
-  ## Nothing paired, falling through to single end printer\n";
-  
-  ## NB! We simply don't care about a whole class of failed pairs!
-  next if $missing_f || $rep_f || $ali_f;
-  
-  ## NB! We simply don't care about another class of failed pairs!
-  next if $ori_f || $short_f || $long_f;
-  
-  
+  ## Debugging
+  print "W:\tnot on the same scaffold\n"
+    if $verbose > 0;
   
   ## The only remaining unpaired ends are those that span
   ## superscaffolds!
-  
-  ## Remeber 1 = TP = forward
-  ## Remeber 2 = TV = reverse
-  
-  ## ONLY PRINT THE BEST!
-  my $hit1 = (sort hits_by_score @hits1)[0];
-  my $hit2 = (sort hits_by_score @hits2)[0];
-  
-  my ($sc1, $qn1, $hn1,  $qs1, $qe1, $hs1, $he1, $st1, $al1, $nt1, $ql1) = @$hit1;
-  my ($sc2, $qn2, $hn2,  $qs2, $qe2, $hs2, $he2, $st2, $al2, $nt2, $ql2) = @$hit2;
   
   ## Debugging
   print join("\t", '1:', @$hit1), "\n" if $verbose > 0;
@@ -350,7 +281,6 @@ foreach my $clone (keys %sequence_pairs){
     print join("\t", $hn2, 'dundeex', 'BES', $hs2, $he2,      $sc2, '-', '.',
 	       "ID=$gi2;Parent=$clone.TV;Note=TV"), "\n";
   }
-  
 }
 
 warn "OK\n";
