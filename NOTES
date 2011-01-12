@@ -4,15 +4,15 @@
 
 
 ## QUERY (FASTA)
-#QUERY=Data/Solanum_phureja_DM.bac_ends.09242009.fsa
-QUERY=test.fsa
+QUERY=Data/Solanum_phureja_DM.bac_ends.09242009.fsa
+#QUERY=test.fsa
 
 ## Assembly
 ASSDIR=Assembly/PGSC0003DM
 
 ## ASSEMBLY (SEQUENCE)
-#ASSEMBLY=$ASSDIR/PGSC0003DMB.fa
-ASSEMBLY=$ASSDIR/PGSC0003DMB.kfilt.19.50.fa
+ASSEMBLY=$ASSDIR/PGSC0003DMB.fa
+#ASSEMBLY=$ASSDIR/PGSC0003DMB.kfilt.19.50.fa
 
 ## ASSEMBLY (INDEX)
 SSAHAIDX=$ASSDIR/Indexes/SSAHA2/`basename $ASSEMBLY .fa`.sanger
@@ -54,10 +54,10 @@ ls \
 
 ## Step 2) Run the QUERY sequences against the ASSEMBLY
 
-## Testing
-$SSAHA_R -output sam \
- -save $SSAHAIDX $QUERY \
- > $RESULTS.sam
+# ## Testing
+# $SSAHA_R -output sam \
+#  -save $SSAHAIDX $QUERY \
+#  > $RESULTS.sam
 
 $SSAHA_R -tags 0 \
  -save $SSAHAIDX $QUERY \
@@ -68,7 +68,7 @@ $SSAHA_R -tags 0 \
 
 
 
-## Replace the whitespace field terminators with tabs
+## Replace the white-space field terminators with tabs
 
 sed -ri 's/\s+/\t/g' $RESULTS
 
@@ -80,15 +80,50 @@ sed -ri 's/\s+/\t/g' $RESULTS
 
 DF=~/BiO/Util/depth_filter.plx
 
-$DF -t query -d 5 -c .80 \
-  $RESULTS \
-> $RESULTS.dfilt.q.d5.c80
+
+## QUERY
+$DF -d 5 -c .80 -t query $RESULTS > $RESULTS.dfilt.q.d5.c80
+$DF -d 3 -c .80 -t query $RESULTS > $RESULTS.dfilt.q.d3.c80
 
 ## This step removes a massive number of alignments!
 wc -l $RESULTS                  # 5912272
 wc -l $RESULTS.dfilt.q.d5.c80   #  198463
+wc -l $RESULTS.dfilt.q.d3.c80   #  140902
 
 
+## HIT
+$DF -d 5 -c .80 -t hit   $RESULTS > $RESULTS.dfilt.h.d5.c80
+$DF -d 3 -c .80 -t hit   $RESULTS > $RESULTS.dfilt.h.d3.c80
+
+## This step removes a massive number of alignments!
+wc -l $RESULTS                  # 5912272
+wc -l $RESULTS.dfilt.h.d5.c80   #  475517
+wc -l $RESULTS.dfilt.h.d3.c80   #  284182
+
+
+## BOTH 1
+
+## This method is better than the method below because...
+
+export RESULTS
+
+perl -e '
+  open I, "<", $ENV{"RESULTS"}. ".dfilt.h.d5.c80" or die;
+  while(<I>){$x{$_}++}
+
+  open O, "<", $ENV{"RESULTS"}. ".dfilt.q.d5.c80" or die;
+  while(<O>){print if $x{$_}}
+
+' > $RESULTS.dfilt.b1.d5.c80
+
+## This step removes a massive number of alignments!
+wc -l $RESULTS                  # 5912272
+wc -l $RESULTS.dfilt.b1.d5.c80  #  123897
+wc -l $RESULTS.dfilt.b1.d3.c80  #   92999
+
+
+
+## BOTH 2
 
 ## Above we use settings such that query sequecnes (BES) with multiple
 ## alignments to the target sequence are removed (or sub-alignments
@@ -101,7 +136,7 @@ $DF -t hit   -d 5 -c .80 \
 > $RESULTS.dfilt.b.d5.c80
 
 ## This step removes a substantial number of alignments
-wc -l $RESULTS.dfilt.b.d5.c80   #  134891
+wc -l $RESULTS.dfilt.b2.d5.c80  #  134891
 
 
 
@@ -113,10 +148,12 @@ wc -l $RESULTS.dfilt.b.d5.c80   #  134891
 ## removed due to their repetative nature (this list is used when
 ## creating the GFF to annotate unpaired ends).
 
-./list_filt_bes.plx > filt_bes.list
+## See inside
+./list_filt_bes.plx > filt_bes.dfilt.b.d3.c80.list
 
 
 
+## See inside
 ./to_gff.plx \
   $RESULTS.dfilt.b.d5.c80 \
 > GFF/`basename $RESULTS`.dfilt.b.d5.c80.gff

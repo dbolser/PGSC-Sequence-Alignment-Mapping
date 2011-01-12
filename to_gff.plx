@@ -97,7 +97,7 @@ warn "got $hit_counter hits for ",
 
 warn "\nparsing filtered list\n";
 
-my $filt_list_file = "filt_bes.list";
+my $filt_list_file = "filt_bes.dfilt.b.d3.c80.list";
 
 open F, '<', $filt_list_file
   or die "failed to open $filt_list_file : $! \n";
@@ -158,12 +158,10 @@ foreach my $clone (keys %sequence_pairs){
   }
   
   if (@hits1 == 0){
-    exists( $filt_list{ $sequence_pairs{$clone}{'TP'} || 'seq missing' } ) ?
-      $rep_f++ : $ali_f++;
+    exists( $filt_list{ $gi1 } ) ? $rep_f++ : $ali_f++;
   }
   if (@hits2 == 0){
-    exists( $filt_list{ $sequence_pairs{$clone}{'TV'} || 'seq missing' } ) ?
-      $rep_f++ : $ali_f++;
+    exists( $filt_list{ $gi2 } ) ? $rep_f++ : $ali_f++;
   }
   
   ## OK
@@ -311,52 +309,10 @@ foreach my $clone (keys %sequence_pairs){
   ## The only remaining unpaired ends are those that span
   ## superscaffolds!
   
-#   ## Remeber 1 = TP = forward
-#   for my $hit1 (sort hits_by_score @hits1){
-    
-#     my ($sc1, $qn1, $hn1,  $qs1, $qe1, $hs1, $he1, $st1,
-# 	$al1, $nt1, $ql1) = @$hit1;
-    
-#     ## Debugging
-#     print join("\t", '1:', @$hit1), "\n"
-#       if $verbose > 0;
-    
-#     if($st1 eq 'F'){
-#       print join("\t", $hn1, 'dundee', 'BAC', $hs1, $he1+1000,  '.', '+', '.', "ID=$clone.TP;Name=$clone.TP"), "\n";
-#       print join("\t", $hn1, 'dundee', 'BES', $hs1, $he1,      $sc1, '+', '.', "ID=$gi1;Parent=$clone.TP;Note=TP"), "\n";
-#     }
-#     if($st1 eq 'C'){
-#       print join("\t", $hn1, 'dundee', 'BAC', $hs1-1000, $he1,  '.', '-', '.', "ID=$clone.TP;Name=$clone.TP"), "\n";
-#       print join("\t", $hn1, 'dundee', 'BES', $hs1, $he1,      $sc1, '-', '.', "ID=$gi1;Parent=$clone.TP;Note=TP"), "\n";
-#     }
-#     last;
-#   }
-  
-#   ## Remeber 2 = TV = reverse
-#   for my $hit2 (sort hits_by_score @hits2){
-    
-#     my ($sc2, $qn2, $hn2,  $qs2, $qe2, $hs2, $he2, $st2,
-# 	$al2, $nt2, $ql2) = @$hit2;
-    
-#     ## Debugging
-#     print join("\t", '2:', @$hit2), "\n"
-#       if $verbose > 0;
-    
-#     if($st2 eq 'F'){
-#       print join("\t", $hn2, 'dundee', 'BAC', $hs2, $he2+1000,  '.', '-', '.', "ID=$clone.TV;Name=$clone.TV"), "\n";
-#       print join("\t", $hn2, 'dundee', 'BES', $hs2, $he2,      $sc2, '+', '.', "ID=$gi2;Parent=$clone.TV;Note=TV"), "\n";
-#     }
-#     if($st2 eq 'C'){
-#       print join("\t", $hn2, 'dundee', 'BAC', $hs2-1000, $he2,  '.', '+', '.', "ID=$clone.TV;Name=$clone.TV"), "\n";
-#       print join("\t", $hn2, 'dundee', 'BES', $hs2, $he2,      $sc2, '-', '.', "ID=$gi2;Parent=$clone.TV;Note=TV"), "\n";
-#     }
-#     last;
-#   }
-  
-  
-  
   ## Remeber 1 = TP = forward
   ## Remeber 2 = TV = reverse
+  
+  ## ONLY PRINT THE BEST!
   my $hit1 = (sort hits_by_score @hits1)[0];
   my $hit2 = (sort hits_by_score @hits2)[0];
   
