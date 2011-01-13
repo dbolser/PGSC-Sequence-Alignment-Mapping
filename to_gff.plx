@@ -32,7 +32,7 @@ my $verbose = 0;
 warn "\nreading sequence data table\n";
 
 my $seq_data_file =
-  "Data/bacends_combined_screened_and_trimmed.v16.header.tab";
+  "Data/RH_BAC_ends_curated.20070603.header.tab";
 
 open SEQ, '<', $seq_data_file
   or die "failed to open $seq_data_file : $!\n";
@@ -40,37 +40,23 @@ open SEQ, '<', $seq_data_file
 my (%sequence_pairs, $seq_count);
 
 while(<SEQ>){
-  my ($id, $clone,
-      $direction, $length, $md5) = split/\t/;
+  my ($gi, $gb, $gb_ver, $clone, $clone_id,
+      $direction, $length) = split/\t/;
   
   $seq_count++;
   
-  ## There should only be two directions!
-  die unless
-    $direction eq 'F' ||
-    $direction eq 'R';
-  
-  ## No direction should be duplicated!
-  # die "$clone\n" if
-  #   exists($sequence_pairs{$clone}{$direction});
-  
-  ## No direction should be duplicated, but there seems to be a bug in
-  ## the sequence file from SGN (the sequences of these 'dupes' (and
-  ## hence their hits) appear to be identical).
-  if(exists($sequence_pairs{$clone}{$direction})){
-    print "DUPE:$clone\tskipping\n"
-      if $verbose > 0;
-    next;
-  }
+  # No direction should be duplicated!
+  die "$clone\n" if
+    exists($sequence_pairs{$clone}{$direction});
   
   ## Store the 'putative pair'
-  $sequence_pairs{$clone}{$direction} = $id;
+  $sequence_pairs{$clone}{$direction} = "$clone\_$direction";
 }
 
 warn "got $seq_count BES (and ",
   scalar keys %sequence_pairs, " BACs)\n";
 
-warn "\nNote, not BACs have BES for both directions!\n";
+warn "\nNote, not all BACs have BES for both directions!\n";
 
 
 
