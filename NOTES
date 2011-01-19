@@ -165,7 +165,8 @@ wc -l $RESULTS.dfilt.qh.d3.c80  #  131992
   $RESULTS.dfilt.qh.d3.c80 \
 > GFF/`basename $RESULTS`.dfilt.qh.d3.c80
 
-wc -l GFF/`basename $RESULTS`.dfilt.qh.d3.c80
+wc -l \
+  GFF/`basename $RESULTS`.dfilt.qh.d3.c80
 
 
 
