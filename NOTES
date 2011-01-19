@@ -83,7 +83,8 @@ $PWD/runSSAHA.plx \
 
 
 
-## Replace the white-space field terminators with tabs
+## Replace the white-space field terminators with tabs. Not required
+## if using 'runSSAHA'.
 
 # sed -ri 's/\s+/\t/g' $RESULTS
 
@@ -168,11 +169,11 @@ wc -l $RESULTS.dfilt.qh.d3.c80  #  131992
 
 ## See inside!
 
-./to_gff.plx \
-  $RESULTS.dfilt.b.d3.c80 \
-> GFF/`basename $RESULTS`.dfilt.b.d3.c80.gff
+./to_gff.plx --source 'dund sl bes' \
+  $RESULTS.dfilt.qh.d3.c80 \
+> GFF/`basename $RESULTS`.dfilt.qh.d3.c80
 
-wc -l GFF/`basename $RESULTS`.dfilt.b.d3.c80.gff
+wc -l GFF/`basename $RESULTS`.dfilt.qh.d3.c80
 
 
 
