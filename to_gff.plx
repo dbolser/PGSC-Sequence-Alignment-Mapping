@@ -11,6 +11,18 @@ short or very long pairs, so they will never be seen!
 
 =cut
 
+use Getopt::Long;
+
+my $source_tag = 'dundee';
+
+GetOptions( "source=s" => \$source_tag,
+	    #"x" => \$x,
+	  )
+  or die "failed to communicate\n";
+
+
+
+
 
 ## We expect to be passed the SSAHA2 alignment file for the BES
 die "pass ssaha file\n"
@@ -94,6 +106,10 @@ warn "got $hit_counter hits for ",
 
 warn "\ndumping GFF\n";
 
+print "##gff-version 3\n";
+print "##species RH\n";
+print "##genome-build BGI 3\n";
+
 my %fail;
 
 foreach my $clone (keys %sequence_pairs){
@@ -143,8 +159,6 @@ foreach my $clone (keys %sequence_pairs){
     }
     next; # Fail!
   }
-  
-  
   
   
   
@@ -217,9 +231,9 @@ foreach my $clone (keys %sequence_pairs){
       }
       
       ## OK! Print three lines of GFF
-      print join("\t", $hn1, 'dundee', 'BAC', $hs1, $he2,  '.', '+', '.', "ID=$clone;Name=$clone"), "\n";
-      print join("\t", $hn1, 'dundee', 'BES', $hs1, $he1, $sc1, '+', '.', "ID=$query_id1;Parent=$clone;Note=F"), "\n";
-      print join("\t", $hn1, 'dundee', 'BES', $hs2, $he2, $sc2, '-', '.', "ID=$query_id2;Parent=$clone;Note=R"), "\n";
+      print join("\t", $hn1, $source_tag, 'BAC', $hs1, $he2,  '.', '+', '.', "ID=$clone;Name=$clone"), "\n";
+      print join("\t", $hn1, $source_tag, 'BES', $hs1, $he1, $sc1, '+', '.', "ID=$query_id1;Parent=$clone;Note=F"), "\n";
+      print join("\t", $hn1, $source_tag, 'BES', $hs2, $he2, $sc2, '-', '.', "ID=$query_id2;Parent=$clone;Note=R"), "\n";
       
       ## DONE!
       $fail{'GOOD PAIR!'}++;
@@ -268,9 +282,9 @@ foreach my $clone (keys %sequence_pairs){
       }
       
       ## OK! Print three lines of GFF
-      print join("\t", $hn1, 'dundee', 'BAC', $hs2, $he1,  '.', '-', '.', "ID=$clone;Name=$clone"), "\n";
-      print join("\t", $hn1, 'dundee', 'BES', $hs1, $he1, $sc1, '-', '.', "ID=$query_id1;Parent=$clone;Note=F"), "\n";
-      print join("\t", $hn1, 'dundee', 'BES', $hs2, $he2, $sc2, '+', '.', "ID=$query_id2;Parent=$clone;Note=R"), "\n";
+      print join("\t", $hn1, $source_tag, 'BAC', $hs2, $he1,  '.', '-', '.', "ID=$clone;Name=$clone"), "\n";
+      print join("\t", $hn1, $source_tag, 'BES', $hs1, $he1, $sc1, '-', '.', "ID=$query_id1;Parent=$clone;Note=F"), "\n";
+      print join("\t", $hn1, $source_tag, 'BES', $hs2, $he2, $sc2, '+', '.', "ID=$query_id2;Parent=$clone;Note=R"), "\n";
       
       ## DONE!
       $fail{'GOOD PAIR!'}++;

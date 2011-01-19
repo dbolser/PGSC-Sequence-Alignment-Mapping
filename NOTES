@@ -1,4 +1,5 @@
 
+## See also:
 ../../Blast/Potato_BES_Vs_Pot_Illumina/
 
 
@@ -10,7 +11,7 @@
 ## QUERY (FASTA)
 QUERY=Data/RH_BAC_ends_curated.20070603.fasta
 
-## Assembly
+## Assembly (DIR)
 ASSDIR=Assembly/PGSC0003DM
 
 ## ASSEMBLY (SEQUENCE)
@@ -77,13 +78,13 @@ $PWD/runSSAHA.plx \
 #    ' \
 #  > $RESULTS
 
-
-## Timed out!
-RESULTS=Results/`basename $RESULTS .ssaha`.part.ssaha
-
+# ## Timed out!
+# RESULTS=Results/`basename $RESULTS .ssaha`.part.ssaha
 
 
-## Replace the white-space field terminators with tabs
+
+## Replace the white-space field terminators with tabs. Not required
+## if using 'runSSAHA'.
 
 # sed -ri 's/\s+/\t/g' $RESULTS
 
@@ -96,38 +97,69 @@ RESULTS=Results/`basename $RESULTS .ssaha`.part.ssaha
 DF=~/BiO/Util/depth_filter.plx
 
 
-## QUERY
+
+# ## TEST 'BOTH' ON CLUSTER
+# 
+# PWD=`pwd`
+# 
+# qsub \
+#   -q 64bit.q -b n -l ram=12000M \
+#   -o $PWD/$RESULTS.dfilt.out \
+#   -e $PWD/$RESULTS.dfilt.err \
+#   \
+# $DF -d 3 -c .80 -t both \
+#   $PWD/$RESULTS \
+# > $PWD/$RESULTS.dfilt.b.d3.c80
+
+
+
+## QUERY (RUNS)
 $DF -d 3 -c .80 -t query $RESULTS > $RESULTS.dfilt.q.d3.c80
 
 ## This step removes a MASSIVE number of alignments!
-wc -l $RESULTS                  # 3871271
-wc -l $RESULTS.dfilt.q.d3.c80   #   69700
+wc -l $RESULTS                  # 6300111
+wc -l $RESULTS.dfilt.q.d3.c80   #  114467
 
 
-## HIT
-$DF -d 3 -c .80 -t hit   $RESULTS > $RESULTS.dfilt.h.d3.c80
+
+# ## HIT (FAILS... See BOTH 2)
+# $DF -d 3 -c .80 -t hit   $RESULTS > $RESULTS.dfilt.h.d3.c80
+# 
+# ## This step removes a massive number of alignments!
+# wc -l $RESULTS                  # 6300111
+# wc -l $RESULTS.dfilt.h.d3.c80   #  
+
+
+
+# ## BOTH (FAILS)
+# 
+# export RESULTS
+# 
+# perl -e '
+#   open I, "<", $ENV{"RESULTS"}. ".dfilt.h.d3.c80" or die;
+#   while(<I>){$x{$_}++}
+#   
+#   open O, "<", $ENV{"RESULTS"}. ".dfilt.q.d3.c80" or die;
+#   while(<O>){print if $x{$_}}
+#   
+# ' > $RESULTS.dfilt.b.d3.c80
+# 
+# ## This step removes a massive number of alignments!
+# wc -l $RESULTS                  # 6300111
+# wc -l $RESULTS.dfilt.b.d3.c80   #   
+
+
+
+## BOTH 2
+$DF -d 3 -c .80 -t hit   $RESULTS.dfilt.q.d3.c80 > $RESULTS.dfilt.qh.d3.c80
 
 ## This step removes a massive number of alignments!
-wc -l $RESULTS                  # 3871271
-wc -l $RESULTS.dfilt.h.d3.c80   #  273764
+wc -l $RESULTS.dfilt.q.d3.c80   #  114467
+wc -l $RESULTS.dfilt.qh.d3.c80  #  100227
 
 
-## BOTH
 
-export RESULTS
 
-perl -e '
-  open I, "<", $ENV{"RESULTS"}. ".dfilt.h.d3.c80" or die;
-  while(<I>){$x{$_}++}
-
-  open O, "<", $ENV{"RESULTS"}. ".dfilt.q.d3.c80" or die;
-  while(<O>){print if $x{$_}}
-
-' > $RESULTS.dfilt.b.d3.c80
-
-## This step removes a MASSIVE number of alignments!
-wc -l $RESULTS                  # 3871271
-wc -l $RESULTS.dfilt.b.d3.c80   #   47542
 
 
 
@@ -135,13 +167,11 @@ wc -l $RESULTS.dfilt.b.d3.c80   #   47542
 
 ## Just make a GFF...
 
-## See inside
+./to_gff.plx --source 'dund sl bes' \
+  $RESULTS.dfilt.qh.d3.c80 \
+> GFF/`basename $RESULTS`.dfilt.qh.d3.c80
 
-./to_gff.plx \
-  $RESULTS.dfilt.b.d3.c80 \
-> GFF/`basename $RESULTS`.dfilt.b.d3.c80.gff
-
-wc -l GFF/`basename $RESULTS`.dfilt.b.d3.c80.gff
+wc -l GFF/`basename $RESULTS`.dfilt.qh.d3.c80
 
 
 
@@ -150,8 +180,6 @@ wc -l GFF/`basename $RESULTS`.dfilt.b.d3.c80.gff
 ## Load it into GB?
 
 ## See ../NOTES
-
-
 
 
 
