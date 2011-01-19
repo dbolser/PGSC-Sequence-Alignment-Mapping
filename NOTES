@@ -4,10 +4,6 @@
 
 
 
-## SSAHA
-
-
-
 ## QUERY (FASTA)
 QUERY=Data/bacends_combined_screened_and_trimmed.v16.seq
 
@@ -27,8 +23,6 @@ RESULTS=Results/`basename $ASSEMBLY .fa`_vs_`basename $QUERY .fsa`.ssaha
 ## TOOLS
 SSAHA_B=/sw/local/src/dbolser/SSAHA/ssaha2Build
 SSAHA_R=/sw/local/src/dbolser/SSAHA/ssaha2
-
-
 
 
 
@@ -166,8 +160,6 @@ wc -l $RESULTS.dfilt.qh.d3.c80  #  131992
 
 
 ## Just make a GFF...
-
-## See inside!
 
 ./to_gff.plx --source 'dund sl bes' \
   $RESULTS.dfilt.qh.d3.c80 \
