@@ -1,11 +1,6 @@
 
 ## See also:
-../../Blast/Potato_BES_Vs_Pot_Illumina/
-
-
-
-## SSAHA
-
+# ../../Blast/Potato_BES_Vs_Pot_Illumina/
 
 
 ## QUERY (FASTA)
@@ -27,8 +22,6 @@ RESULTS=Results/`basename $ASSEMBLY .fa`_vs_`basename $QUERY .fsa`.ssaha
 ## TOOLS
 SSAHA_B=/sw/local/src/dbolser/SSAHA/ssaha2Build
 SSAHA_R=/sw/local/src/dbolser/SSAHA/ssaha2
-
-
 
 
 
