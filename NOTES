@@ -1,5 +1,5 @@
 
-## SSAHA
+
 
 
 
@@ -7,7 +7,7 @@
 QUERY=Data/Solanum_phureja_DM.bac_ends.09242009.fsa
 #QUERY=test.fsa
 
-## Assembly
+## Assembly (DIR)
 ASSDIR=Assembly/PGSC0003DM
 
 ## ASSEMBLY (SEQUENCE)
@@ -23,8 +23,6 @@ RESULTS=Results/`basename $ASSEMBLY .fa`_vs_`basename $QUERY .fsa`.ssaha
 ## TOOLS
 SSAHA_B=/sw/local/src/dbolser/SSAHA/ssaha2Build
 SSAHA_R=/sw/local/src/dbolser/SSAHA/ssaha2
-
-
 
 
 
@@ -144,12 +142,12 @@ wc -l $RESULTS.dfilt.b2.d5.c80  #  134891
 
 ## Just make a GFF...
 
-## See inside
-./to_gff.plx \
-  $RESULTS.dfilt.b.d5.c80 \
-> GFF/`basename $RESULTS`.dfilt.b.d5.c80.gff
+./to_gff.plx --source 'dund dm bes' \
+  $RESULTS.dfilt.b.d3.c80 \
+> GFF/`basename $RESULTS`.dfilt.b.d3.c80.gff
 
-wc -l GFF/`basename $RESULTS`.dfilt.b.d5.c80.gff
+wc -l \
+  GFF/`basename $RESULTS`.dfilt.b.d3.c80.gff
 
 
 
