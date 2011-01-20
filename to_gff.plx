@@ -4,32 +4,24 @@ use strict;
 
 =head1 DESCRIPTION
 
-Thsi script produces GFF from specific BES or FES alignments. It uses
-a specific, hard-coded regexp to match one end to another.
+This script produces GFF from BES alignments (SSAHA2 format). It uses
+a specific regexp to match one end to another, and uses a BES sequence
+specific data table to construct the GFF. The script removes very
+short or very long pairs, so they will never be seen!
 
 =cut
 
-
-
-## Get an important file
-
 use Getopt::Long;
 
-## Set to 1 to enable debugging output.
-my $verbose = 0;
+my $source_tag = 'dundee';
 
-## Table used to link forward and reverse sequence IDs to their common
-## clone ID i.e. for paring forward and reverse sequences.
-my $header_table;
-
-GetOptions(
-	   "v"    => \$verbose,
-	   "hf=s" => \$header_table,
+GetOptions( "source=s" => \$source_tag,
+	    #"x" => \$x,
 	  )
-  or die "failed to parse command line options!\n";
+  or die "failed to communicate\n";
 
 
-die "pass a header table\n" unless defined($header_table);
+
 
 
 ## We expect to be passed the SSAHA2 alignment file for the FES
@@ -38,32 +30,36 @@ die "pass ssaha file\n"
 
 
 
-## Read in the sequence header table so that we can match the sequence
-## identifier in the alignment file to the more informative sequence
-## header (parsed into the table elsewhere).
+## Set to 1 to enable debugging output
+my $verbose = 0;
+
+
+
+## Read in the FES specif sequence header table so that we can match
+## the sequence identifier in the alignment file to the more
+## informative sequence header (the header is parsed into a table
+## elsewhere).
 
 ## At this stage, we also construct the FES pairs for a Fosmid (clone)
 
-warn "\nreading sequence data table ($header_table)\n";
+warn "\nreading sequence data table\n";
 
-open SEQ, '<', $header_table
-  or die "failed to open $header_table : $!\n";
+my $seq_data_file =
+  "Data/Solanum_phureja_DM.fosmid_ends.06172009.header.tab";
+
+open SEQ, '<', $seq_data_file
+  or die "failed to open $seq_data_file : $!\n";
 
 my (%sequence_pairs, $seq_count);
 
 while(<SEQ>){
-  my ($gi, $gb, $gb_ver, $clone,
+  my ($gi, $gb, $gb_ver, $clone, #$clone_id,
       $direction, $length) = split/\t/;
   
   $seq_count++;
   
-  ## There should only be two directions!
-  die unless
-    $direction eq 'TF' ||
-    $direction eq 'TR';
-  
   ## No direction should be duplicated!
-  die if
+  die "$clone\n" if
     exists($sequence_pairs{$clone}{$direction});
   
   ## Store the 'putative pair'
@@ -93,13 +89,13 @@ while(<>){
   
   ## Get the GI
   die "failed to parse : '$query_name'\n"
-    unless $query_name =~ /^gi\|(\d+)\|gb\|(FI\d+)\.\d\|\2$/;
+    unless $query_name =~ /^gi\|(\d+)\|gb\|(FI\d+)(\.\d+)\|\2$/;
   
-  ## Store all the hits for this GI together
+  ## Store all the hits for this query together
   push
     @{$hits{$1}},
       [$score, $query_name, $hit_name, $qs, $qe, $hs, $he,
-       $strand, $align_len, $ident, $query_len, $2];
+       $strand, $align_len, $ident, $query_len];
 }
 
 warn "got $hit_counter hits for ",
@@ -109,12 +105,17 @@ warn "got $hit_counter hits for ",
 
 
 
-## Produce the GFF, paired and all
+
+## Produce the GFF
 
 warn "\ndumping GFF\n";
 
+print "##gff-version 3\n";
+print "##species DM\n";
+print "##genome-build BGI 3\n";
 
-CLONE:
+my %fail;
+
 foreach my $clone (keys %sequence_pairs){
   
   ## Really debugging
@@ -125,219 +126,220 @@ foreach my $clone (keys %sequence_pairs){
     if $verbose > 0;
   
   ## Get the hits for both sequences
-  my $gi1 = $sequence_pairs{$clone}{'TF'} || 'seq missing';
-  my $gi2 = $sequence_pairs{$clone}{'TR'} || 'seq missing';
+  my $query_id1 = $sequence_pairs{$clone}{'TF'} || 'seq missing';
+  my $query_id2 = $sequence_pairs{$clone}{'TR'} || 'seq missing';
   
-  my @hits1 = exists($hits{$gi1}) ? @{$hits{$gi1}} : ();
-  my @hits2 = exists($hits{$gi2}) ? @{$hits{$gi2}} : ();
+  my @hits1 = exists($hits{$query_id1}) ? @{$hits{$query_id1}} : ();
+  my @hits2 = exists($hits{$query_id2}) ? @{$hits{$query_id2}} : ();
   
   ## Debugging
-  print "G:\t$gi1\t", scalar(@hits1), "\n"
+  print "G:\t$query_id1\t", scalar(@hits1), "\n"
     if $verbose > 0;
-  print "G:\t$gi2\t", scalar(@hits2), "\n"
+  print "G:\t$query_id2\t", scalar(@hits2), "\n"
     if $verbose > 0;
   
   
   
-  ## Create some failure flags?
-  my ($missing_f, $ali_f) = (0, 0);
+  ## Failure accounting.
+
+  ## Hits for both ends? If not, we give up now (we don't want to
+  ## 'pollute' the GFF with these kinds of problem).
   
-  if ($gi1 eq 'seq missing' ||
-      $gi2 eq 'seq missing'){
-    $missing_f++;
+  if(scalar @hits1 == 0){
+    if($query_id1 eq 'seq missing'){
+      $fail{'missing seq'}++;
+    }
+    else{
+      $fail{'no align'}++;
+    }
+    next; # Fail!
   }
-  
-  if (@hits1 == 0){
-    $ali_f++;
+  if(scalar @hits2 == 0){
+    if($query_id2 eq 'seq missing'){
+      $fail{'missing seq'}++;
+    }
+    else{
+      $fail{'no align'}++;
+    }
+    next; # Fail!
   }
-  if (@hits2 == 0){
-    $ali_f++;
-  }
-  
-  ## OK
-  
-  
   
   
   
   ## Try to pair the hits (best hits first)
   
-  ## NOTE: if the best hits don't form a 'good pair', we give up on
-  ## the clone.
-
-  my ($scaff_f, $ori_f, $short_f, $long_f) = (0, 0, 0, 0);
+  ## NOTE: if the best hits for each end don't form a 'good pair', we
+  ## give up on the clone. About 3% of the clones could be 'recovered'
+  ## by hunting for a lower scoring 'good pair', however, their
+  ## quality is dubious, and they are complex to handle! We skip them
+  ## here.
   
- HIT:
-  for my $hit1 (sort hits_by_score @hits1){
-    for my $hit2 (sort hits_by_score @hits2){
-      
-      my ($sc1, $qn1, $hn1,  $qs1, $qe1, $hs1, $he1, $st1,
-	  $al1, $nt1, $ql1, $gb1) = @$hit1;
-      my ($sc2, $qn2, $hn2,  $qs2, $qe2, $hs2, $he2, $st2,
-	  $al2, $nt2, $ql2, $gb2) = @$hit2;
-      
-      ## Debugging
-      print join("\t", '1:', @$hit1), "\n"
-	if $verbose > 0;
-      print join("\t", '2:', @$hit2), "\n"
-	if $verbose > 0;
-      
-      ## Check they hit the same scaffold
-      if ($hn1 ne $hn2){
+  my $hit1 = (sort hits_by_score @hits1)[0]; # Forward
+  my $hit2 = (sort hits_by_score @hits2)[0]; # Reverse
+  
+  my ($sc1, $qn1, $hn1, $qs1, $qe1,
+      $hs1, $he1, $st1, $al1, $nt1, $ql1) = @$hit1;
+  my ($sc2, $qn2, $hn2, $qs2, $qe2,
+      $hs2, $he2, $st2, $al2, $nt2, $ql2) = @$hit2;
+  
+  ## Debugging
+  print join("\t", '1:', @$hit1), "\n"
+    if $verbose > 0;
+  print join("\t", '2:', @$hit2), "\n"
+    if $verbose > 0;
+  
+  
+  
+  ## Check they hit the same scaffold. If not they must span a pair of
+  ## scaffolds, and are handled differently (below).
+  
+  if ($hn1 eq $hn2){
+    
+    ## Check orientation 1/2
+    if ($st1 eq 'F'){
+      if ($st2 ne 'C'){
 	## Debugging
-	print "W:\tnot on the same scaffold\n"
+	print "W:\tincorrect orientation (parallel)\n"
 	  if $verbose > 0;
-	$scaff_f++;
-	last HIT;
+	$fail{'bad ori, para'}++;
+	next;
       }
       
-      ## Check orientation 1/2
-      if ($st1 eq 'F'){
-	if ($st2 ne 'C'){
+      ## OK. Check their distance
+      my $bes_distance = $he2 - $hs1 + 1;
+      print "I:\tdistance is $bes_distance\n"
+	if $verbose > 0;
+      
+      if ($bes_distance < 5_000){
+	if ($bes_distance < 0){
 	  ## Debugging
-	  print "W:\tincorrect orientation\n"
+	  print "W:\tincorrect orientation, (away)\n"
 	    if $verbose > 0;
-	  $ori_f++;
-	  last HIT;
+	  $fail{'bad ori, away'}++;
 	}
-	
-	## OK. Check their distance
-	my $fes_distance = $he2 - $hs1 + 1;
-	print "I:\tdistance is $fes_distance\n"
-	  if $verbose > 0;
-	
-	if ($fes_distance < 5000){
+	else{
 	  ## Debugging
-	  print "W:\treally incorrect orientation\n"
+	  print "W:\ttoo short\n"
 	    if $verbose > 0;
-	  $short_f++;
-	  last HIT;
+	  $fail{'too short'}++;
 	}
-	
-	if ($fes_distance > 100_000){
-	  ## Debugging
-	  print "W:\ttoo long!\n"
-	    if $verbose > 0;
-	  $long_f++;
-	  last HIT;
-	}
-	
-	## OK! Print three lines of GFF
-	print join("\t", $hn1, 'dundee', 'Fosmid', $hs1, $he2,  '.', '+', '.', "ID=$clone;Name=$clone"), "\n";
-	print join("\t", $hn1, 'dundee', 'FES',    $hs1, $he1, $sc1, '+', '.', "ID=$gi1;Name=$gb1;Parent=$clone;Note=TF"), "\n";
-	print join("\t", $hn1, 'dundee', 'FES',    $hs2, $he2, $sc2, '-', '.', "ID=$gi2;Name=$gb2;Parent=$clone;Note=TR"), "\n";
-	
-	## DONE!
-	next CLONE;
+	next;
       }
       
-      
-      
-      ## Check orientation 2/2
-      if ($st1 eq 'C'){
-	if ($st2 ne 'F'){
-	  ## Debugging
-	  print "W:\tincorrect orientation\n"
-	    if $verbose > 0;
-	  $ori_f++;
-	  last HIT;
-	}
-	
-	## OK. Check their distance
-	my $fes_distance = $he1 - $hs2 + 1;
-	print "I:\tdistance is $fes_distance\n"
+      if ($bes_distance > 500_000){
+	## Debugging
+	print "W:\ttoo long!\n"
 	  if $verbose > 0;
-	
-	if ($fes_distance < 5000){
-	  ## Debugging
-	  print "W:\treally incorrect orientation\n"
-	    if $verbose > 0;
-	  $short_f++;
-	  last HIT;
-	}
-	
-	if ($fes_distance > 100_000){
-	  ## Debugging
-	  print "W:\ttoo long!\n"
-	    if $verbose > 0;
-	  $long_f++;
-	  last HIT;
-	}
-	
-	## OK! Print three lines of GFF
-	print join("\t", $hn1, 'dundee', 'Fosmid', $hs2, $he1,  '.', '-', '.', "ID=$clone;Name=$clone"), "\n";
-	print join("\t", $hn1, 'dundee', 'FES',    $hs1, $he1, $sc1, '-', '.', "ID=$gi1;Name=$gb1;Parent=$clone;Note=TF"), "\n";
-	print join("\t", $hn1, 'dundee', 'FES',    $hs2, $he2, $sc2, '+', '.', "ID=$gi2;Name=$gb2;Parent=$clone;Note=TR"), "\n";
-	
-	## DONE!
-	next CLONE;
+	$fail{'too long'}++;
+	next;
       }
       
+      ## OK! Print three lines of GFF
+      print join("\t", $hn1, $source_tag, 'Fosmid', $hs1, $he2,  '.', '+', '.', "ID=$clone;Name=$clone"), "\n";
+      print join("\t", $hn1, $source_tag, 'FES',    $hs1, $he1, $sc1, '+', '.', "ID=$query_id1;Parent=$clone"), "\n";
+      print join("\t", $hn1, $source_tag, 'FES',    $hs2, $he2, $sc2, '-', '.', "ID=$query_id2;Parent=$clone"), "\n";
+      
+      ## DONE!
+      $fail{'GOOD PAIR!'}++;
+      next;
+    }
+    
+    
+    
+    ## Check orientation 2/2
+    if ($st1 eq 'C'){
+      if ($st2 ne 'F'){
+	## Debugging
+	print "W:\tincorrect orientation (parallel)\n"
+	  if $verbose > 0;
+	$fail{'bad ori, para'}++;
+	next;
+      }
+      
+      ## OK. Check their distance
+      my $bes_distance = $he1 - $hs2 + 1;
+      print "I:\tdistance is $bes_distance\n"
+	if $verbose > 0;
+      
+      if ($bes_distance < 5_000){
+	if ($bes_distance < 0){
+	  ## Debugging
+	  print "W:\tincorrect orientation, (away)\n"
+	    if $verbose > 0;
+	  $fail{'bad ori, away'}++;
+	}
+	else{
+	  ## Debugging
+	  print "W:\ttoo short\n"
+	    if $verbose > 0;
+	  $fail{'too short'}++;
+	}
+	next;
+      }
+      
+      if ($bes_distance > 500_000){
+	## Debugging
+	print "W:\ttoo long!\n"
+	  if $verbose > 0;
+	$fail{'too long'}++;
+	next;
+      }
+      
+      ## OK! Print three lines of GFF
+      print join("\t", $hn1, $source_tag, 'Fosmid', $hs2, $he1,  '.', '-', '.', "ID=$clone;Name=$clone"), "\n";
+      print join("\t", $hn1, $source_tag, 'FES',    $hs1, $he1, $sc1, '-', '.', "ID=$query_id1;Parent=$clone"), "\n";
+      print join("\t", $hn1, $source_tag, 'FES',    $hs2, $he2, $sc2, '+', '.', "ID=$query_id2;Parent=$clone"), "\n";
+      
+      ## DONE!
+      $fail{'GOOD PAIR!'}++;
+      next;
     }
   }
   
   
   
+  ## Nothing paired, falling through to single end printer
   
-  
-  
-  
-  ## Nothing paired, falling through to single end printer\n";
-  
-  ## NB! We simply don't care about a whole class of failed pairs!
-  next if $missing_f || $ali_f;
-  
-  ## NB! We simply don't care about another class of failed pairs!
-  next if $ori_f || $short_f || $long_f;
-  
-  
+  ## Debugging
+  print "W:\tnot on the same scaffold\n"
+    if $verbose > 0;
   
   ## The only remaining unpaired ends are those that span
   ## superscaffolds!
-  
-  ## Remeber 1 = TF = forward
-  ## Remeber 2 = TR = reverse
-  my $hit1 = (sort hits_by_score @hits1)[0];
-  my $hit2 = (sort hits_by_score @hits2)[0];
-  
-  my ($sc1, $qn1, $hn1,  $qs1, $qe1, $hs1, $he1, $st1, $al1, $nt1, $ql1, $gb1) = @$hit1;
-  my ($sc2, $qn2, $hn2,  $qs2, $qe2, $hs2, $he2, $st2, $al2, $nt2, $ql2, $gb2) = @$hit2;
   
   ## Debugging
   print join("\t", '1:', @$hit1), "\n" if $verbose > 0;
   print join("\t", '2:', @$hit2), "\n" if $verbose > 0;
   
-  ## ONE
+  ## ONE (Forward)
   if($st1 eq 'F'){
-    print join("\t", $hn1, 'dundeex', 'Fosmid', $hs1, $he1+1000,  '.', '+', '.',
-	       "ID=$clone.TF;Name=$clone.TF;Note=Other end matches $hn2"), "\n";
-    print join("\t", $hn1, 'dundeex', 'FES',    $hs1, $he1,      $sc1, '+', '.',
-	       "ID=$gi1;Name=$gb1;Parent=$clone.TF"), "\n";
+    print join("\t", $hn1, "$source_tag link", 'Fosmid', $hs1, $he1+1000,  '.', '+', '.', "ID=$clone.TF;Name=$clone.TF;Note=Other end matches $hn2"), "\n";
+    print join("\t", $hn1, "$source_tag link", 'FES',    $hs1, $he1,      $sc1, '+', '.', "ID=$query_id1;Parent=$clone.TF"), "\n";
   }
   if($st1 eq 'C'){
-    print join("\t", $hn1, 'dundeex', 'Fosmid', $hs1-1000, $he1,  '.', '-', '.',
-	       "ID=$clone.TF;Name=$clone.TF;Note=Other end matches $hn2"), "\n";
-    print join("\t", $hn1, 'dundeex', 'FES',    $hs1, $he1,      $sc1, '-', '.',
-	       "ID=$gi1;Name=$gb1;Parent=$clone.TF"), "\n";
+    print join("\t", $hn1, "$source_tag link", 'Fosmid', $hs1-1000, $he1,  '.', '-', '.', "ID=$clone.TF;Name=$clone.TF;Note=Other end matches $hn2"), "\n";
+    print join("\t", $hn1, "$source_tag link", 'FES',    $hs1,      $he1, $sc1, '-', '.', "ID=$query_id1;Parent=$clone.TF"), "\n";
   }
   
-  ## TWO
+  ## TWO (Reverse)
   if($st2 eq 'F'){
-    print join("\t", $hn2, 'dundeex', 'Fosmid', $hs2, $he2+1000,  '.', '-', '.',
-	       "ID=$clone.TR;Name=$clone.TR;Note=Other end matches $hn1"), "\n";
-    print join("\t", $hn2, 'dundeex', 'FES',    $hs2, $he2,      $sc2, '+', '.',
-	       "ID=$gi2;Name=$gb2;Parent=$clone.TR"), "\n";
+    print join("\t", $hn2, "$source_tag link", 'Fosmid', $hs2, $he2+1000,  '.', '-', '.', "ID=$clone.TR;Name=$clone.TR;Note=Other end matches $hn1"), "\n";
+    print join("\t", $hn2, "$source_tag link", 'FES',    $hs2, $he2,      $sc2, '+', '.', "ID=$query_id2;Parent=$clone.TR"), "\n";
   }
   if($st2 eq 'C'){
-    print join("\t", $hn2, 'dundeex', 'Fosmid', $hs2-1000, $he2,  '.', '+', '.',
-	       "ID=$clone.TR;Name=$clone.TR;Note=Other end matches $hn1"), "\n";
-    print join("\t", $hn2, 'dundeex', 'FES',    $hs2, $he2,      $sc2, '-', '.',
-	       "ID=$gi2;Name=$gb2;Parent=$clone.TR"), "\n";
+    print join("\t", $hn2, "$source_tag link", 'Fosmid', $hs2-1000, $he2,  '.', '+', '.', "ID=$clone.TR;Name=$clone.TR;Note=Other end matches $hn1"), "\n";
+    print join("\t", $hn2, "$source_tag link", 'FES',    $hs2,      $he2, $sc2, '-', '.', "ID=$query_id2;Parent=$clone.TR"), "\n";
   }
-  
 }
 
+
+
+## output failures
+warn "$_\t$fail{$_}\n" for keys %fail;
+
 warn "OK\n";
+
+
 
 
 

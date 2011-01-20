@@ -1,0 +1,152 @@
+
+## QUERY (FASTA)
+QUERY=Data/Solanum_phureja_DM.fosmid_ends.06172009.fsa
+
+## Assembly (DIR)
+ASSDIR=Assembly/PGSC0003DM
+
+## ASSEMBLY (SEQUENCE)
+ASSEMBLY=$ASSDIR/PGSC0003DMB.fa
+
+## ASSEMBLY (INDEX)
+SSAHAIDX=$ASSDIR/Indexes/SSAHA2/`basename $ASSEMBLY .fa`.sanger
+
+## OUT
+RESULTS=Results/`basename $ASSEMBLY .fa`_vs_`basename $QUERY .fsa`.ssaha
+
+## TOOLS
+SSAHA_B=/sw/local/src/dbolser/SSAHA/ssaha2Build
+SSAHA_R=/sw/local/src/dbolser/SSAHA/ssaha2
+
+
+
+## TEST! NB: We create the index below, if it doesn't exist here:
+
+ls \
+  $QUERY \
+  $ASSEMBLY \
+  $SSAHAIDX.size \
+  $RESULTS \
+  $SSAHA_B \
+  $SSAHA_R
+
+
+
+
+
+## Step 1) Index the assembly for SSAHA2 searching
+
+# $SSAHA_B \
+#  -save $SSAHAIDX \
+#        $ASSEMBLY
+
+
+
+
+
+## Step 2) Run the QUERY sequences against the ASSEMBLY
+
+$SSAHA_R -tags 0 \
+ -save $SSAHAIDX $QUERY \
+ | perl -ne '
+     print if /^\d/
+   ' \
+ > $RESULTS
+
+
+
+## Replace the white-space field terminators with tabs
+
+sed -ri 's/\s+/\t/g' $RESULTS
+
+
+
+
+
+## REMOVE ALIGNMENTS INVOLVING REPEATS.
+
+DF=~/BiO/Util/depth_filter.plx
+
+
+## QUERY
+$DF -d 5 -c .80 -t query $RESULTS > $RESULTS.dfilt.q.d5.c80
+$DF -d 4 -c .80 -t query $RESULTS > $RESULTS.dfilt.q.d4.c80
+$DF -d 3 -c .80 -t query $RESULTS > $RESULTS.dfilt.q.d3.c80
+
+## This step removes a massive number of alignments!
+wc -l $RESULTS                  #  564581
+wc -l $RESULTS.dfilt.q.d5.c80   #   21296
+wc -l $RESULTS.dfilt.q.d4.c80   #   19123
+wc -l $RESULTS.dfilt.q.d3.c80   #   16570
+
+
+
+## HIT
+$DF -d 5 -c .80 -t hit   $RESULTS > $RESULTS.dfilt.h.d5.c80
+$DF -d 4 -c .80 -t hit   $RESULTS > $RESULTS.dfilt.h.d4.c80
+$DF -d 3 -c .80 -t hit   $RESULTS > $RESULTS.dfilt.h.d3.c80
+
+## This step removes a massive number of alignments!
+wc -l $RESULTS                  #  564581
+wc -l $RESULTS.dfilt.h.d5.c80   #  107310
+wc -l $RESULTS.dfilt.h.d4.c80   #   91345
+wc -l $RESULTS.dfilt.h.d3.c80   #   70851
+
+
+
+## BOTH 0
+$DF -d 5 -c .80 -t both  $RESULTS > $RESULTS.dfilt.b.d5.c80
+$DF -d 4 -c .80 -t both  $RESULTS > $RESULTS.dfilt.b.d4.c80
+$DF -d 3 -c .80 -t both  $RESULTS > $RESULTS.dfilt.b.d3.c80
+
+## This step removes a massive number of alignments!
+wc -l $RESULTS                  #  564581
+wc -l $RESULTS.dfilt.b.d5.c80   #   17974
+wc -l $RESULTS.dfilt.b.d4.c80   #   16785
+wc -l $RESULTS.dfilt.b.d3.c80   #   14948
+
+
+
+
+
+
+
+## Just make a GFF...
+
+./to_gff.plx --source 'dund dm fos' \
+  $RESULTS.dfilt.b.d3.c80 \
+> GFF/`basename $RESULTS`.dfilt.b.d3.c80.gff
+
+wc -l \
+  GFF/`basename $RESULTS`.dfilt.b.d3.c80.gff
+
+
+
+
+
+## Load it into GB?
+
+## See ../NOTES
+
+
+
+
+
+## NOTE! (out of date, doesn't include HIT repeat filter)
+
+From the 10,240 DM Fosmids, there are 20,480 FES (in theory).
+
+We have sequences for 19,835 FES, i.e. 645 or 3% are 'missing'.
+
+Of these 19,835 FES:
+We have alignments for 19,788 FES, i.e. 47 or 0% fail to align.
+
+After filtering:
+We have alignments for 15,367 FES, i.e. 4,421 or 22% are rejected.
+
+
+The total drop off is 5,113 FES or 25% of the ideal 20,480.
+
+
+
+## HOW MANY GOOD ? BAD ? SILLY PAIRS?
