@@ -1,0 +1,182 @@
+
+## GSMAPPER
+
+BASEDIR=`pwd` # For QSUB
+
+## TARGET
+TARGET=$BASEDIR/../Assembly/PGSC0003DM/PGSC0003DMB.fa
+
+## QUERY
+QDIR=$BASEDIR/Data/Paired_SFF
+
+
+
+## 08kb
+## The five 8 (15) kb libraries
+QUERIES=(
+  $QDIR/F2K9UYJ04.sff
+  $QDIR/F3R7RWZ01.sff
+  $QDIR/F3R7RWZ02.sff
+  $QDIR/F5IUTHY01.sff
+  $QDIR/F5IUTHY02.sff
+)
+
+## OUTPUT
+RESULTS=$BASEDIR/Results/`basename $TARGET .fa`_vs_WGS_454_PE_08kb
+
+
+
+## 20kb
+# ## The five 20 kb libraries
+# QUERIES=(
+#   $QDIR/F34YKD402.sff
+#   $QDIR/F4M90WV02.sff
+#   $QDIR/F64AD3K01.sff
+#   $QDIR/GBSKQZK02.sff
+#   $QDIR/GBSX3HF01.sff
+# )
+
+# ## OUTPUT
+# RESULTS=$BASEDIR/Results/`basename $TARGET .fa`_vs_WGS_454_PE_20kb
+
+
+
+
+
+# Test(s)
+ls ${QUERIES[@]}
+
+
+
+
+
+## RUN
+
+GSMAPPER=/sw/local/src/dbolser/454/bin/runMapping
+
+for QUERY in ${QUERIES[@]}; do
+    echo $QUERY
+    echo $QUERY
+
+    SFF_ID=`basename $QUERY .sff`
+
+    qsub -q 64bit.q -b y -l ram=10000M \
+      -o $RESULTS.$SFF_ID.out \
+      -e $RESULTS.$SFF_ID.err \
+    $GSMAPPER -nrm -nobig \
+      -o $RESULTS.$SFF_ID \
+	 $TARGET $QUERY
+
+done
+
+
+
+# Test
+qstat -u dbolser
+
+
+
+## File cleanup?
+## Note, we only actually use '454PairStatus.txt'!
+
+ls      $RESULTS.*/mapping/*.{qual,fna}
+du -csh $RESULTS.*/mapping/*.{qual,fna}
+rm -f   $RESULTS.*/mapping/*.{qual,fna}
+
+
+
+
+
+
+
+## Just make a GFF...
+
+## Step 1... lets trash dupes!
+
+./trash_dupes_simple.plx \
+  $RESULTS.*/mapping/454PairStatus.txt \
+> $RESULTS.PairStatus.nr.txt
+
+## 20kb
+wc -l $RESULTS.PairStatus.nr.txt # 180374
+
+## 08kb
+wc -l $RESULTS.PairStatus.nr.txt # 184381
+
+
+
+
+
+## REMOVE ALIGNMENTS INVOLVING REPEATS
+
+## GSMapper ensures that all hits are unique. However, Some 'unique'
+## pieces of the genome attract many query sequences. These artifacts
+## are seen across BES, FES and 20kb 454 PE alignments, and should
+## therefore be removed.
+
+DF=./depth_filter.plx
+
+$DF -d 3 -c .80 \
+  $RESULTS.PairStatus.nr.txt \
+> $RESULTS.PairStatus.nr.txt.dfilt.b.d3.c80
+
+## 08kb
+## This step removes a substantial number of alignments
+wc -l $RESULTS.PairStatus.nr.txt                # 184381
+wc -l $RESULTS.PairStatus.nr.txt.dfilt.b.d3.c80 # 155899
+
+## 20kb
+## This step removes a substantial number of alignments
+wc -l $RESULTS.PairStatus.nr.txt                # 180374
+wc -l $RESULTS.PairStatus.nr.txt.dfilt.b.d5.c80 # 171024
+wc -l $RESULTS.PairStatus.nr.txt.dfilt.b.d3.c80 # 146138
+
+
+
+
+
+## Now GFF it
+
+./to_gff.plx \
+  -s dundee08 \
+     $RESULTS.PairStatus.nr.txt.dfilt.b.d3.c80 \
+  -t $RESULTS.*/mapping/454TrimStatus.txt \
+  -r $RESULTS.*/mapping/454ReadStatus.txt \
+> GFF/`basename $RESULTS`.dfilt.b.d3.c80.gff
+
+## 08kb
+wc -l GFF/`basename $RESULTS`.dfilt.b.d3.c80.gff # 456900
+
+## 20kb
+wc -l GFF/`basename $RESULTS`.dfilt.b.d3.c80.gff # 428990
+
+
+
+## Load it into GB
+
+## See ../NOTES
+
+
+
+
+
+## NOTE! (out of date, doesn't include HIT repeat filter)
+
+From the 1,686,078 aligned DM WGS 454 PES, there are the same number
+of clones (in theory), as each PES contains both ends of the clone.
+
+Of these 1,686,078 PES:
+We have alignments for both ends in 850,885 cases, i.e. 835,188 or 50%
+fail to align uniquely on both ends.
+
+After redundancy filtering:
+We have alignments for 180,374 clones, i.e. 670,511 or 79% are
+rejected as being redundant!
+
+
+
+## NOTE! 
+
+Redundancy is identified by an identical `5 start site on both
+ends. This will be affected by the trim data, but I have not processed
+that.
