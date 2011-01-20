@@ -1,18 +1,12 @@
 
-
-
-
-
 ## QUERY (FASTA)
 QUERY=Data/Solanum_phureja_DM.bac_ends.09242009.fsa
-#QUERY=test.fsa
 
 ## Assembly (DIR)
 ASSDIR=Assembly/PGSC0003DM
 
 ## ASSEMBLY (SEQUENCE)
 ASSEMBLY=$ASSDIR/PGSC0003DMB.fa
-#ASSEMBLY=$ASSDIR/PGSC0003DMB.kfilt.19.50.fa
 
 ## ASSEMBLY (INDEX)
 SSAHAIDX=$ASSDIR/Indexes/SSAHA2/`basename $ASSEMBLY .fa`.sanger
@@ -51,11 +45,6 @@ ls \
 
 
 ## Step 2) Run the QUERY sequences against the ASSEMBLY
-
-# ## Testing
-# $SSAHA_R -output sam \
-#  -save $SSAHAIDX $QUERY \
-#  > $RESULTS.sam
 
 $SSAHA_R -tags 0 \
  -save $SSAHAIDX $QUERY \
@@ -145,6 +134,16 @@ wc -l $RESULTS.dfilt.b2.d5.c80  #  134891
 ./to_gff.plx --source 'dund dm bes' \
   $RESULTS.dfilt.b.d3.c80 \
 > GFF/`basename $RESULTS`.dfilt.b.d3.c80.gff
+
+#dumping GFF
+#bad ori, away   37
+#missing seq     13735
+#GOOD PAIR!      24517
+#too short       161
+#no align        73565
+#bad ori, para   62
+#too long        3
+#OK
 
 wc -l \
   GFF/`basename $RESULTS`.dfilt.b.d3.c80.gff
