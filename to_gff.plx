@@ -35,9 +35,10 @@ my $verbose = 0;
 
 
 
-## Read in the BES specif sequence data table so that we can match the
-## sequence identifier in the alignment file to the more informative
-## sequence header (the header is parsed into a table elsewhere).
+## Read in the BES specif sequence header table so that we can match
+## the sequence identifier in the alignment file to the more
+## informative sequence header (the header is parsed into a table
+## elsewhere).
 
 ## At this stage, we also construct the BES pairs for a BAC (clone)
 
@@ -125,8 +126,8 @@ foreach my $clone (keys %sequence_pairs){
     if $verbose > 0;
   
   ## Get the hits for both sequences
-  my $query_id1 = $sequence_pairs{$clone}{'TP'} || 'seq missing';
-  my $query_id2 = $sequence_pairs{$clone}{'TV'} || 'seq missing';
+  my $query_id1 = $sequence_pairs{$clone}{'TV'} || 'seq missing';
+  my $query_id2 = $sequence_pairs{$clone}{'TP'} || 'seq missing';
   
   my @hits1 = exists($hits{$query_id1}) ? @{$hits{$query_id1}} : ();
   my @hits2 = exists($hits{$query_id2}) ? @{$hits{$query_id2}} : ();
@@ -151,7 +152,6 @@ foreach my $clone (keys %sequence_pairs){
     else{
       $fail{'no align'}++;
     }
-    next; # Fail!
   }
   if(scalar @hits2 == 0){
     if($query_id2 eq 'seq missing'){
@@ -160,9 +160,8 @@ foreach my $clone (keys %sequence_pairs){
     else{
       $fail{'no align'}++;
     }
-    next; # Fail!
   }
-  
+  next unless @hits1 && @hits2;
   
   
   ## Try to pair the hits (best hits first)
@@ -173,8 +172,8 @@ foreach my $clone (keys %sequence_pairs){
   ## quality is dubious, and they are complex to handle! We skip them
   ## here.
   
-  my $hit1 = (sort hits_by_score @hits1)[0]; # Forward?
-  my $hit2 = (sort hits_by_score @hits2)[0]; # Reverse?
+  my $hit1 = (sort hits_by_score @hits1)[0]; # Forward
+  my $hit2 = (sort hits_by_score @hits2)[0]; # Reverse
   
   my ($sc1, $qn1, $hn1, $qs1, $qe1,
       $hs1, $he1, $st1, $al1, $nt1, $ql1) = @$hit1;
@@ -235,8 +234,8 @@ foreach my $clone (keys %sequence_pairs){
       
       ## OK! Print three lines of GFF
       print join("\t", $hn1, $source_tag, 'BAC', $hs1, $he2,  '.', '+', '.', "ID=$clone;Name=$clone"), "\n";
-      print join("\t", $hn1, $source_tag, 'BES', $hs1, $he1, $sc1, '+', '.', "ID=$query_id1;Parent=$clone;Note=TP"), "\n";
-      print join("\t", $hn1, $source_tag, 'BES', $hs2, $he2, $sc2, '-', '.', "ID=$query_id2;Parent=$clone;Note=TV"), "\n";
+      print join("\t", $hn1, $source_tag, 'BES', $hs1, $he1, $sc1, '+', '.', "ID=$query_id1;Parent=$clone"), "\n";
+      print join("\t", $hn1, $source_tag, 'BES', $hs2, $he2, $sc2, '-', '.', "ID=$query_id2;Parent=$clone"), "\n";
       
       ## DONE!
       $fail{'GOOD PAIR!'}++;
@@ -286,8 +285,8 @@ foreach my $clone (keys %sequence_pairs){
       
       ## OK! Print three lines of GFF
       print join("\t", $hn1, $source_tag, 'BAC', $hs2, $he1,  '.', '-', '.', "ID=$clone;Name=$clone"), "\n";
-      print join("\t", $hn1, $source_tag, 'BES', $hs1, $he1, $sc1, '-', '.', "ID=$query_id1;Parent=$clone;Note=TP"), "\n";
-      print join("\t", $hn1, $source_tag, 'BES', $hs2, $he2, $sc2, '+', '.', "ID=$query_id2;Parent=$clone;Note=TV"), "\n";
+      print join("\t", $hn1, $source_tag, 'BES', $hs1, $he1, $sc1, '-', '.', "ID=$query_id1;Parent=$clone"), "\n";
+      print join("\t", $hn1, $source_tag, 'BES', $hs2, $he2, $sc2, '+', '.', "ID=$query_id2;Parent=$clone"), "\n";
       
       ## DONE!
       $fail{'GOOD PAIR!'}++;
@@ -310,24 +309,24 @@ foreach my $clone (keys %sequence_pairs){
   print join("\t", '1:', @$hit1), "\n" if $verbose > 0;
   print join("\t", '2:', @$hit2), "\n" if $verbose > 0;
   
-  ## ONE (Forward?)
+  ## ONE (Forward)
   if($st1 eq 'F'){
-    print join("\t", $hn1, "$source_tag link", 'BAC', $hs1, $he1+1000,  '.', '+', '.', "ID=$clone.TP;Name=$clone.TP;Note=Other end matches $hn2"), "\n";
-    print join("\t", $hn1, "$source_tag link", 'BES', $hs1, $he1,      $sc1, '+', '.', "ID=$query_id1;Parent=$clone.TP;Note=TP"), "\n";
+    print join("\t", $hn1, "$source_tag link", 'BAC', $hs1, $he1+1000,  '.', '+', '.', "ID=$clone\_F;Name=$clone\_F;Note=Other end matches $hn2"), "\n";
+    print join("\t", $hn1, "$source_tag link", 'BES', $hs1, $he1,      $sc1, '+', '.', "ID=$query_id1;Parent=$clone\_F"), "\n";
   }
   if($st1 eq 'C'){
-    print join("\t", $hn1, "$source_tag link", 'BAC', $hs1-1000, $he1,  '.', '-', '.', "ID=$clone.TP;Name=$clone.TP;Note=Other end matches $hn2"), "\n";
-    print join("\t", $hn1, "$source_tag link", 'BES', $hs1, $he1,      $sc1, '-', '.', "ID=$query_id1;Parent=$clone.TP;Note=TP"), "\n";
+    print join("\t", $hn1, "$source_tag link", 'BAC', $hs1-1000, $he1,  '.', '-', '.', "ID=$clone\_F;Name=$clone\_F;Note=Other end matches $hn2"), "\n";
+    print join("\t", $hn1, "$source_tag link", 'BES', $hs1,      $he1, $sc1, '-', '.', "ID=$query_id1;Parent=$clone\_F"), "\n";
   }
   
-  ## TWO (Reverse?)
+  ## TWO (Reverse)
   if($st2 eq 'F'){
-    print join("\t", $hn2, "$source_tag link", 'BAC', $hs2, $he2+1000,  '.', '-', '.', "ID=$clone.TV;Name=$clone.TV;Note=Other end matches $hn1"), "\n";
-    print join("\t", $hn2, "$source_tag link", 'BES', $hs2, $he2,      $sc2, '+', '.', "ID=$query_id2;Parent=$clone.TV;Note=TV"), "\n";
+    print join("\t", $hn2, "$source_tag link", 'BAC', $hs2, $he2+1000,  '.', '-', '.', "ID=$clone\_R;Name=$clone\_R;Note=Other end matches $hn1"), "\n";
+    print join("\t", $hn2, "$source_tag link", 'BES', $hs2, $he2,      $sc2, '+', '.', "ID=$query_id2;Parent=$clone\_R"), "\n";
   }
   if($st2 eq 'C'){
-    print join("\t", $hn2, "$source_tag link", 'BAC', $hs2-1000, $he2,  '.', '+', '.', "ID=$clone.TV;Name=$clone.TV;Note=Other end matches $hn1"), "\n";
-    print join("\t", $hn2, "$source_tag link", 'BES', $hs2, $he2,      $sc2, '-', '.', "ID=$query_id2;Parent=$clone.TV;Note=TV"), "\n";
+    print join("\t", $hn2, "$source_tag link", 'BAC', $hs2-1000, $he2,  '.', '+', '.', "ID=$clone\_R;Name=$clone\_R;Note=Other end matches $hn1"), "\n";
+    print join("\t", $hn2, "$source_tag link", 'BES', $hs2,      $he2, $sc2, '-', '.', "ID=$query_id2;Parent=$clone\_R"), "\n";
   }
 }
 
