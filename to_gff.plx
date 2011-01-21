@@ -326,22 +326,22 @@ foreach my $clone (keys %sequence_pairs){
   
   ## ONE (Forward)
   if($st1 eq 'F'){
-    print join("\t", $hn1, "$source_tag link", 'BAC', $hs1, $he1+1000,  '.', '+', '.', "ID=p$query_id1;Name=$query_id1;Note=Other end matches $hn2"), "\n";
-    print join("\t", $hn1, "$source_tag link", 'BES', $hs1, $he1,      $sc1, '+', '.', "ID=$query_id1;Parent=p$query_id1"), "\n";
+    print join("\t", $hn1, "$source_tag link", 'BAC', $hs1, $he1+1000,  '.', '+', '.', "ID=$query_id1;Name=$query_id1;Note=Other end matches $hn2"), "\n";
+    print join("\t", $hn1, "$source_tag link", 'BES', $hs1, $he1,      $sc1, '+', '.', "Parent=$query_id1"), "\n";
   }
   if($st1 eq 'C'){
-    print join("\t", $hn1, "$source_tag link", 'BAC', $hs1-1000, $he1,  '.', '-', '.', "ID=p$query_id1;Name=$query_id1;Note=Other end matches $hn2"), "\n";
-    print join("\t", $hn1, "$source_tag link", 'BES', $hs1, $he1,      $sc1, '-', '.', "ID=$query_id1;Parent=p$query_id1"), "\n";
+    print join("\t", $hn1, "$source_tag link", 'BAC', $hs1-1000, $he1,  '.', '-', '.', "ID=$query_id1;Name=$query_id1;Note=Other end matches $hn2"), "\n";
+    print join("\t", $hn1, "$source_tag link", 'BES', $hs1, $he1,      $sc1, '-', '.', "Parent=$query_id1"), "\n";
   }
   
   ## TWO (Reverse)
   if($st2 eq 'F'){
-    print join("\t", $hn2, "$source_tag link", 'BAC', $hs2, $he2+1000,  '.', '-', '.', "ID=p$query_id2;Name=$query_id2;Note=Other end matches $hn1"), "\n";
-    print join("\t", $hn2, "$source_tag link", 'BES', $hs2, $he2,      $sc2, '+', '.', "ID=$query_id2;Parent=p$query_id2"), "\n";
+    print join("\t", $hn2, "$source_tag link", 'BAC', $hs2, $he2+1000,  '.', '-', '.', "ID=$query_id2;Name=$query_id2;Note=Other end matches $hn1"), "\n";
+    print join("\t", $hn2, "$source_tag link", 'BES', $hs2, $he2,      $sc2, '+', '.', "Parent=$query_id2"), "\n";
   }
   if($st2 eq 'C'){
-    print join("\t", $hn2, "$source_tag link", 'BAC', $hs2-1000, $he2,  '.', '+', '.', "ID=p$query_id2;Name=$query_id2;Note=Other end matches $hn1"), "\n";
-    print join("\t", $hn2, "$source_tag link", 'BES', $hs2, $he2,      $sc2, '-', '.', "ID=$query_id2;Parent=p$query_id2"), "\n";
+    print join("\t", $hn2, "$source_tag link", 'BAC', $hs2-1000, $he2,  '.', '+', '.', "ID=$query_id2;Name=$query_id2;Note=Other end matches $hn1"), "\n";
+    print join("\t", $hn2, "$source_tag link", 'BES', $hs2, $he2,      $sc2, '-', '.', "Parent=$query_id2"), "\n";
   }
 }
 
