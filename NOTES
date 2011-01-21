@@ -12,7 +12,6 @@ ASSDIR=Assembly/PGSC0003DM
 
 ## ASSEMBLY (SEQUENCE)
 ASSEMBLY=$ASSDIR/PGSC0003DMB.fa
-#ASSEMBLY=$ASSDIR/PGSC0003DMB.kfilt.19.50.fa
 
 ## ASSEMBLY (INDEX)
 SSAHAIDX=$ASSDIR/Indexes/SSAHA2/`basename $ASSEMBLY .fa`.sanger
@@ -163,10 +162,19 @@ wc -l $RESULTS.dfilt.qh.d3.c80  #  131992
 
 ./to_gff.plx --source 'dund sl bes' \
   $RESULTS.dfilt.qh.d3.c80 \
-> GFF/`basename $RESULTS`.dfilt.qh.d3.c80
+> GFF/`basename $RESULTS`.dfilt.qh.d3.c80.gff
 
 wc -l \
-  GFF/`basename $RESULTS`.dfilt.qh.d3.c80
+  GFF/`basename $RESULTS`.dfilt.qh.d3.c80.gff # 42460
+
+# dumping GFF
+# bad ori, away   34
+# GOOD PAIR!      8135
+# too short       28
+# no align        309506
+# bad ori, para   311
+# too long        12
+# OK
 
 
 
