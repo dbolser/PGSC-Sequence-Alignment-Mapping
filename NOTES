@@ -165,7 +165,16 @@ wc -l $RESULTS.dfilt.qh.d3.c80  #  100227
 > GFF/`basename $RESULTS`.dfilt.qh.d3.c80.gff
 
 wc -l \
-  GFF/`basename $RESULTS`.dfilt.qh.d3.c80.gff
+  GFF/`basename $RESULTS`.dfilt.qh.d3.c80.gff # 83806
+
+# bad ori, away   75
+# missing seq     8590
+# GOOD PAIR!      20597
+# too short       46
+# no align        39233
+# bad ori, para   369
+# too long        11
+# OK
 
 
 

@@ -35,9 +35,9 @@ my $verbose = 0;
 
 
 
-## Read in the BES specif sequence data table so that we can match the
-## sequence identifier in the alignment file to the more informative
-## sequence header (the header is parsed into a table elsewhere).
+## Read in the sequence header table so that we can match the sequence
+## identifier in the alignment file to the more informative sequence
+## header (the header is parsed into a table elsewhere).
 
 ## At this stage, we also construct the BES pairs for a BAC (clone)
 
@@ -57,7 +57,7 @@ while(<SEQ>){
   
   $seq_count++;
   
-  # No direction should be duplicated!
+  ## No direction should be duplicated!
   die "$clone\n" if
     exists($sequence_pairs{$clone}{$direction});
   
@@ -309,22 +309,22 @@ foreach my $clone (keys %sequence_pairs){
   
   ## ONE (Forward)
   if($st1 eq 'F'){
-    print join("\t", $hn1, "$source_tag link", 'BAC', $hs1, $he1+1000,  '.', '+', '.', "ID=$clone\_F;Name=$clone\_F;Note=Other end matches $hn2"), "\n";
-    print join("\t", $hn1, "$source_tag link", 'BES', $hs1, $he1,      $sc1, '+', '.', "ID=$query_id1;Parent=$clone\_F;Note=F"), "\n";
+    print join("\t", $hn1, "$source_tag link", 'BAC', $hs1, $he1+1000,  '.', '+', '.', "ID=$clone\_F;Name=$clone;Note=Other end matches $hn2"), "\n";
+    print join("\t", $hn1, "$source_tag link", 'BES', $hs1, $he1,      $sc1, '+', '.', "Parent=$clone\_F"), "\n";
   }
   if($st1 eq 'C'){
-    print join("\t", $hn1, "$source_tag link", 'BAC', $hs1-1000, $he1,  '.', '-', '.', "ID=$clone\_F;Name=$clone\_F;Note=Other end matches $hn2"), "\n";
-    print join("\t", $hn1, "$source_tag link", 'BES', $hs1, $he1,      $sc1, '-', '.', "ID=$query_id1;Parent=$clone\_F;Note=F"), "\n";
+    print join("\t", $hn1, "$source_tag link", 'BAC', $hs1-1000, $he1,  '.', '-', '.', "ID=$clone\_F;Name=$clone;Note=Other end matches $hn2"), "\n";
+    print join("\t", $hn1, "$source_tag link", 'BES', $hs1, $he1,      $sc1, '-', '.', "Parent=$clone\_F"), "\n";
   }
   
   ## TWO (Reverse)
   if($st2 eq 'F'){
-    print join("\t", $hn2, "$source_tag link", 'BAC', $hs2, $he2+1000,  '.', '-', '.', "ID=$clone\_R;Name=$clone\_R;Note=Other end matches $hn1"), "\n";
-    print join("\t", $hn2, "$source_tag link", 'BES', $hs2, $he2,      $sc2, '+', '.', "ID=$query_id2;Parent=$clone\_R;Note=R"), "\n";
+    print join("\t", $hn2, "$source_tag link", 'BAC', $hs2, $he2+1000,  '.', '-', '.', "ID=$clone\_R;Name=$clone;Note=Other end matches $hn1"), "\n";
+    print join("\t", $hn2, "$source_tag link", 'BES', $hs2, $he2,      $sc2, '+', '.', "Parent=$clone\_R"), "\n";
   }
   if($st2 eq 'C'){
-    print join("\t", $hn2, "$source_tag link", 'BAC', $hs2-1000, $he2,  '.', '+', '.', "ID=$clone\_R;Name=$clone\_R;Note=Other end matches $hn1"), "\n";
-    print join("\t", $hn2, "$source_tag link", 'BES', $hs2, $he2,      $sc2, '-', '.', "ID=$query_id2;Parent=$clone\_R;Note=R"), "\n";
+    print join("\t", $hn2, "$source_tag link", 'BAC', $hs2-1000, $he2,  '.', '+', '.', "ID=$clone\_R;Name=$clone;Note=Other end matches $hn1"), "\n";
+    print join("\t", $hn2, "$source_tag link", 'BES', $hs2, $he2,      $sc2, '-', '.', "Parent=$clone\_R"), "\n";
   }
 }
 
