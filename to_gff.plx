@@ -13,25 +13,26 @@ short or very long pairs, so they will never be seen!
 
 use Getopt::Long;
 
+## Set the source field, if desired
 my $source_tag = 'dundee';
 
-GetOptions( "source=s" => \$source_tag,
+## Set to 1 to enable debugging output
+my $verbose = 0;
+
+GetOptions( "source=s"  => \$source_tag,
+	    "v"         => \$verbose,
 	    #"x" => \$x,
 	  )
-  or die "failed to communicate\n";
+  or die "failed to communicate!\n";
 
 
 
+## We expect to be passed the SSAHA2 alignment file(s) for the BES
 
-
-## We expect to be passed the SSAHA2 alignment file for the BES
 die "pass ssaha file\n"
   unless @ARGV;
 
 
-
-## Set to 1 to enable debugging output
-my $verbose = 0;
 
 
 
@@ -77,7 +78,7 @@ warn "\nNote, not all BACs have BES for both directions!\n";
 
 ## Read in the alignment results
 
-warn "\nparsing ssaha results\n";
+warn "\nparsing results\n";
 
 my (%hits, $hit_counter);
 
