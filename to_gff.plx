@@ -97,15 +97,6 @@ while(<>){
   
   my $id = $args{'ID'};
   
-  ## We delete this here so it doesn't turn up later
-  delete $args{'ID'};
-  
-  ## Use Alias instead, if we have one
-  if(exists $args{'Alias'}){
-    $args{'ID'} = $args{'Alias'};
-    delete $args{'Alias'};
-  }
-  
   
   
   ## Match this 'clone end' id to a library
@@ -297,6 +288,9 @@ foreach my $lib (keys %hits){
 		 ),
 	    ), "\n";
       
+      ## ID tweek to avoid ID overlap
+      $args_ref1->{'ID'} = '_'. $args_ref1->{'ID'};
+      
       print
 	join("\t",
 	     $seq_id1, "$source1", $type1, $start1, $end1, $score1,
@@ -317,6 +311,9 @@ foreach my $lib (keys %hits){
 		  "Note=Other end matches ". $seq_id1,
 		 ),
 	    ), "\n";
+      
+      ## ID tweek to avoid ID overlap
+      $args_ref2->{'ID'} = '_'. $args_ref2->{'ID'};
       
       print
 	join("\t",
