@@ -142,13 +142,19 @@ while(<>){
   print
     join("\t",
          $hit_name1, $source, $type, $hit_beg1, $hit_end1, $score1, $strand1, '.',
-         join(";", "ID=$library$clone\_F", "Target=x $query_beg1 $query_end1", "ident=$map_accuracy1")
+         join(";", "ID=$library$clone\_F",
+              "Target=$library$clone\_F $query_beg1 $query_end1",
+              "ident=$map_accuracy1"
+             ),
         ), "\n";
   
   print
     join("\t",
          $hit_name2, $source, $type, $hit_beg2, $hit_end2, $score2, $strand2, '.',
-         join(";", "ID=$library$clone\_R", "Target=x $query_beg2 $query_end2", "ident=$map_accuracy2")
+         join(";", "ID=$library$clone\_R",
+              "Target=$library$clone\_R $query_beg2 $query_end2",
+              "ident=$map_accuracy2"
+             ),
         ), "\n";
   
 }

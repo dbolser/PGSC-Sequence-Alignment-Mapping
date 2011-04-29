@@ -121,12 +121,14 @@ while(<>){
       join(';',
            "ID=$query_name2",
            "Alias=$query_name",
+           "Target=$query_name2 $qs $qe",
           );
   }
   else{
     $attrs =
       join(';',
            "ID=$query_name",
+           "Target=$query_name $qs $qe",
           );
   }
   
@@ -142,7 +144,7 @@ while(<>){
          $score,
          $strand,
          '.',
-         $attrs. ";Target=x $qs $qe;ident=$ident;length=$query_len",
+         $attrs. "ident=$ident;length=$query_len",
         ), "\n";
 }
 
