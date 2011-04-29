@@ -29,14 +29,14 @@ my @header_file;
 my $verbose = 0;
 
 GetOptions( "species=s"   => \$species,
-	    "version=s"   => \$target,
-	    "source=s"    => \$source,
-	    "type=s"      => \$type,
-	    
-	    "header=s{3}" => \@header_file,
-	    
-	    "verbose|v+"  => \$verbose,
-	  )
+            "version=s"   => \$target,
+            "source=s"    => \$source,
+            "type=s"      => \$type,
+            
+            "header=s{3}" => \@header_file,
+            
+            "verbose|v+"  => \$verbose,
+          )
   or die "failed to communicate!\n";
 
 
@@ -64,7 +64,7 @@ if(@header_file){
     unless -s $header_file;
   
   unless( $header_file_match_col eq int $header_file_match_col  and
-	  $header_file_alias_col eq int $header_file_alias_col ){
+          $header_file_alias_col eq int $header_file_alias_col ){
     die "need integers for these values : ",
       "'$header_file_match_col' and '$header_file_alias_col'!\n";
   }
@@ -119,15 +119,15 @@ while(<>){
     
     $attrs =
       join(';',
-	   "ID=$query_name2",
-	   "Alias=$query_name",
-	  );
+           "ID=$query_name2",
+           "Alias=$query_name",
+          );
   }
   else{
     $attrs =
       join(';',
-	   "ID=$query_name",
-	  );
+           "ID=$query_name",
+          );
   }
   
   $strand =~ tr/FC/+-/
@@ -135,15 +135,15 @@ while(<>){
   
   print
     join("\t",
-	 $hit_name,
-	 $source,
-	 $type,
-	 $hs, $he,
-	 $score,
-	 $strand,
-	 '.',
-	 $attrs. ";Target=x $qs $qe;ident=$ident;length=$query_len",
-	), "\n";
+         $hit_name,
+         $source,
+         $type,
+         $hs, $he,
+         $score,
+         $strand,
+         '.',
+         $attrs. ";Target=x $qs $qe;ident=$ident;length=$query_len",
+        ), "\n";
 }
 
 warn "got $hsp_counter HSPs\n";

@@ -16,9 +16,9 @@ my $verbose = 0;
 
 
 GetOptions(
-	   'mates_file=s'   => \$mates_file,
-	   'verbose+'       => \$verbose,
-	  )
+           'mates_file=s'   => \$mates_file,
+           'verbose+'       => \$verbose,
+          )
   or die "failed to communicate!\n";
 
 ## SANITY CHECK COMMAND LINE OPTIONS
@@ -185,9 +185,9 @@ foreach my $lib (keys %hits){
     my $hit2 = (sort hits_by_score @$hits2)[0]; # REVERSE
     
     my ($seq_id1, $source1, $type1, $start1, $end1, $score1,
-	$strand1, $phase1, $args_ref1) = @$hit1;
+        $strand1, $phase1, $args_ref1) = @$hit1;
     my ($seq_id2, $source2, $type2, $start2, $end2, $score2,
-	$strand2, $phase2, $args_ref2) = @$hit2;
+        $strand2, $phase2, $args_ref2) = @$hit2;
     
     ## Debugging
     print join("\t", '1:', @$hit1), "\n"
@@ -209,8 +209,8 @@ foreach my $lib (keys %hits){
       ## Calculate clone size, sidestepping issues of incorrect or
       ## incorrect orientation
       my ($st, $en) =
-	range($start1, $end1,
-	      $start2, $end2);
+        range($start1, $end1,
+              $start2, $end2);
       my $insert_size = $en - $st;
       
       ## Check orientation and establish clone orientation
@@ -218,16 +218,16 @@ foreach my $lib (keys %hits){
       my $clone_strand = 0; ## 0 = unknown
       
       if($start1 < $start2){
-	if($strand1 eq '+' && $strand2 eq '-'){
-	  $good_pair = 'g'; ## g = good
-	  $clone_strand = '+'; ## a +ve clone
-	}
+        if($strand1 eq '+' && $strand2 eq '-'){
+          $good_pair = 'g'; ## g = good
+          $clone_strand = '+'; ## a +ve clone
+        }
       }
       else{
-	if($strand2 eq '+' && $strand1 eq '-'){
-	  $good_pair = 'g'; ## g = good
-	  $clone_strand = '-'; ## a -ve clone
-	}
+        if($strand2 eq '+' && $strand1 eq '-'){
+          $good_pair = 'g'; ## g = good
+          $clone_strand = '-'; ## a -ve clone
+        }
       }
       ## a 'bad' pair, clone strand is undefined
       
@@ -239,31 +239,31 @@ foreach my $lib (keys %hits){
       $happy = 'f' if $insert_size > $mates{$lib}{max} * 4; ## fail
       
       print
-	join("\t",
-	     $seq_id1, "$source1 $happy$good_pair", 'clone', $st, $en, '.',
-	     $clone_strand, '.',
-	     join(';',
-		  "ID=$clone", "Name=$clone",
-		 ),
-	    ), "\n";
+        join("\t",
+             $seq_id1, "$source1 $happy$good_pair", 'clone', $st, $en, '.',
+             $clone_strand, '.',
+             join(';',
+                  "ID=$clone", "Name=$clone",
+                 ),
+            ), "\n";
       
       print
-	join("\t",
-	     $seq_id1, $source1, $type1, $start1, $end1, $score1,
-	     $strand1, $phase1,
-	     join(';',
-		  "Parent=$clone", map("$_=". $args_ref1->{$_}, keys %$args_ref1)
-		 ),
-	    ), "\n";
+        join("\t",
+             $seq_id1, $source1, $type1, $start1, $end1, $score1,
+             $strand1, $phase1,
+             join(';',
+                  "Parent=$clone", map("$_=". $args_ref1->{$_}, keys %$args_ref1)
+                 ),
+            ), "\n";
       
       print
-	join("\t",
-	     $seq_id2, $source2, $type2, $start2, $end2, $score2,
-	     $strand2, $phase2,
-	     join(';',
-		  "Parent=$clone", map("$_=". $args_ref2->{$_}, keys %$args_ref2)
-		 ),
-	    ), "\n";
+        join("\t",
+             $seq_id2, $source2, $type2, $start2, $end2, $score2,
+             $strand2, $phase2,
+             join(';',
+                  "Parent=$clone", map("$_=". $args_ref2->{$_}, keys %$args_ref2)
+                 ),
+            ), "\n";
       
       ## Failure accounting
       $failure_code{"paired: $source1 $happy$good_pair"}++;
@@ -277,52 +277,52 @@ foreach my $lib (keys %hits){
     
     else{
       print
-	join("\t",
-	     $seq_id1, "$source1 l", 'clone',
-	     $start1 + ($strand1 eq '+' ? 0 : -10000),
-	     $end1   + ($strand1 eq '+' ? +10000 : 0),
-	     $score1, $strand1, '.',
-	     join(';',
-		  "ID=$clone\_F", "Name=$clone\_F",
-		  "Note=Other end matches ". $seq_id2,
-		 ),
-	    ), "\n";
+        join("\t",
+             $seq_id1, "$source1 l", 'clone',
+             $start1 + ($strand1 eq '+' ? 0 : -10000),
+             $end1   + ($strand1 eq '+' ? +10000 : 0),
+             $score1, $strand1, '.',
+             join(';',
+                  "ID=$clone\_F", "Name=$clone\_F",
+                  "Note=Other end matches ". $seq_id2,
+                 ),
+            ), "\n";
       
       ## ID tweek to avoid ID overlap
       $args_ref1->{'ID'} = '_'. $args_ref1->{'ID'};
       
       print
-	join("\t",
-	     $seq_id1, "$source1", $type1, $start1, $end1, $score1,
-	     $strand1, '.',
-	     join(';',
-		  "Parent=$clone\_F", map("$_=". $args_ref1->{$_}, keys %$args_ref1)
-		 ),
-	    ), "\n";
+        join("\t",
+             $seq_id1, "$source1", $type1, $start1, $end1, $score1,
+             $strand1, '.',
+             join(';',
+                  "Parent=$clone\_F", map("$_=". $args_ref1->{$_}, keys %$args_ref1)
+                 ),
+            ), "\n";
       
       print
-	join("\t",
-	     $seq_id2, "$source2 l", 'clone',
-	     $start2 + ($strand2 eq '+' ? 0 : -10000),
-	     $end2   + ($strand2 eq '+' ? +10000 : 0),
-	     $score2, $strand2, '.',
-	     join(';',
-		  "ID=$clone\_R", "Name=$clone\_R",
-		  "Note=Other end matches ". $seq_id1,
-		 ),
-	    ), "\n";
+        join("\t",
+             $seq_id2, "$source2 l", 'clone',
+             $start2 + ($strand2 eq '+' ? 0 : -10000),
+             $end2   + ($strand2 eq '+' ? +10000 : 0),
+             $score2, $strand2, '.',
+             join(';',
+                  "ID=$clone\_R", "Name=$clone\_R",
+                  "Note=Other end matches ". $seq_id1,
+                 ),
+            ), "\n";
       
       ## ID tweek to avoid ID overlap
       $args_ref2->{'ID'} = '_'. $args_ref2->{'ID'};
       
       print
-	join("\t",
-	     $seq_id2, "$source2", $type2, $start2, $end2, $score2,
-	     $strand2, '.',
-	     join(';',
-		  "Parent=$clone\_R", map("$_=". $args_ref2->{$_}, keys %$args_ref2)
-		 ),
-	    ), "\n";
+        join("\t",
+             $seq_id2, "$source2", $type2, $start2, $end2, $score2,
+             $strand2, '.',
+             join(';',
+                  "Parent=$clone\_R", map("$_=". $args_ref2->{$_}, keys %$args_ref2)
+                 ),
+            ), "\n";
       
     }
   }
