@@ -27,11 +27,16 @@
 HEAD=DM_BES/Data/*.header.tab
 SAHA=DM_BES/Results/*.dfilt.b.d3.c80
 
+ll $HEAD $SAHA
+
 ./ssaha_to_gff.plx \
     --header $HEAD 0 1 \
     --species DM  --version PGSC0003DMB --source "dund dm bes" \
     --type "clone end" \
-    $SAHA > $SAHA.gff
+    $SAHA > GFF/PGSC0003DMB_clone_ends/dmb3_dm_bes.gff
+
+wc -l GFF/PGSC0003DMB_clone_ends/dmb3_dm_bes.gff
+
 
 
 # 2) DM_FOS
@@ -39,11 +44,16 @@ SAHA=DM_BES/Results/*.dfilt.b.d3.c80
 HEAD=DM_FOS/Data/*.header.tab
 SAHA=DM_FOS/Results/*.dfilt.b.d3.c80
 
+ll $HEAD $SAHA
+
 ./ssaha_to_gff.plx \
     --header $HEAD 0 1 \
     --species DM  --version PGSC0003DMB --source "dund dm fos" \
     --type "clone end" \
-    $SAHA > $SAHA.gff
+    $SAHA > GFF/PGSC0003DMB_clone_ends/dmb3_dm_fos.gff
+
+wc -l GFF/PGSC0003DMB_clone_ends/dmb3_dm_fos.gff
+
 
 
 # 3) RH_BES
@@ -54,7 +64,9 @@ SAHA=RH_BES/Results/*.dfilt.qh.d3.c80
 ./ssaha_to_gff.plx \
     --species DM --version PGSC0003DMB --source "dund rh bes" \
     --type "clone end" \
-    $SAHA > $SAHA.gff
+    $SAHA > GFF/PGSC0003DMB_clone_ends/dmb3_rh_bes.gff
+
+wc -l GFF/PGSC0003DMB_clone_ends/dmb3_rh_bes.gff
 
 
 # 4) SL_BES
@@ -66,13 +78,16 @@ SAHA=SL_BES/Results/*.dfilt.qh.d3.c80
     --header $HEAD 0 1 \
     --species DM  --version PGSC0003DMB --source "dund sl clones" \
     --type "clone end" \
-    $SAHA > $SAHA.gff
+    $SAHA > GFF/PGSC0003DMB_clone_ends/dmb3_sl_bes.gff
+
+wc -l GFF/PGSC0003DMB_clone_ends/dmb3_sl_bes.gff
 
 
 
 # 5) WGS_454_PE
 
 X=08
+
 X=20
 
 SAHA=WGS_454_PE/Results/PGSC0003DMB_vs_WGS_454_PE_${X}kb.PairStatus.nr.txt.dfilt.b.d3.c80
@@ -81,8 +96,9 @@ READ=WGS_454_PE/Results/PGSC0003DMB_vs_WGS_454_PE_${X}kb.*/mapping/454ReadStatus
 
 ./newbler_to_gff.plx -v \
   --trim $TRIM --read $READ --lib x${X}WGS_ \
-  --species DM  --version PGSC0003DMB --source "dund dm wgs 454" \
-  --type "clone end"                    $SAHA > $SAHA.gff
+  --species DM  --version PGSC0003DMB --source "dund dm wgs 454 ${X}kb" \
+  --type "clone end" \
+    $SAHA > GFF/PGSC0003DMB_clone_ends/dmb3_dm_wgs_454_pe_${X}kb.gff
 
 
 
@@ -90,49 +106,11 @@ READ=WGS_454_PE/Results/PGSC0003DMB_vs_WGS_454_PE_${X}kb.*/mapping/454ReadStatus
 
 ## We are finally poised to 'pair' and annotate everything consistently!
 
-for DIR in DM_BES DM_FOS RH_BES SL_BES WGS_454_PE; do
-    echo $DIR
-    GFF=$DIR/Results/*.gff
-    
+for GFF in GFF/PGSC0003DMB_clone_ends/*.gff; do
     ./to_gff.plx -m my.mates \
- 	$GFF \
- 	> GFF/PGSC0003DMB_assembly_feature_set/`basename $GFF`
-    
-    wc -l GFF/PGSC0003DMB_assembly_feature_set/`basename $GFF`
+ 	$GFF > GFF/PGSC0003DMB_clone_ends/`basename $GFF .gff`.paired.gff
 done
 
-
-
-
-
-## Load everything from scratch?
-
-## Takes about one hour!
-
-time \
-\
-bp_seqfeature_load.pl -c -f -v -z \
-  --summary \
-  --dsn dbolser_006:mysql.compbio.dundee.ac.uk \
-  --user dbolser \
-  --pass abc123 \
-  \
-GFF/PGSC0003DMB.gff \
-GFF/PGSC0003DMB.gaps.gff \
-GFF/PGSC0003DMB.scaffold.gff \
-\
-GFF/dmb3_dm_454_wgs_pe_08kb.gff \
-GFF/dmb3_dm_454_wgs_pe_20kb.gff \
-GFF/dmb3_dm_fos.gff             \
-GFF/dmb3_dm_bes.gff             \
-GFF/dmb3_rh_bes.gff             \
-GFF/dmb3_sl_bes.gff             \
-\
-GFF/dm.map.gff  \
-GFF/tom.map.gff \
-GFF/wgp.map.gff \
-\
-GFF/align-S_lycopersicum_chromosomes.2.30.fa-PGSC0003DMB.gff
 
 
 
@@ -149,13 +127,4 @@ bp_seqfeature_load.pl -c -f -v -z \
   --user dbolser \
   --pass abc123 \
   \
-GFF/PGSC0003DMB_assembly_feature_set/dmb3_dm_fos.gff \
-GFF/PGSC0003DMB_assembly_feature_set/dmb3_dm_bes.gff \
-GFF/PGSC0003DMB_assembly_feature_set/dmb3_rh_bes.gff \
-GFF/PGSC0003DMB_assembly_feature_set/dmb3_sl_bes.gff \
-GFF/PGSC0003DMB_assembly_feature_set/dmb3_dm_wgs_454_pe.gff
-
-
-
-
-
+GFF/PGSC0003DMB_clone_ends/*.paired.gff
