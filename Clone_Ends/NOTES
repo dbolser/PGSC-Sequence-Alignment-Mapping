@@ -1,0 +1,192 @@
+
+## PE/MP alignments
+
+# 1) DM_BES
+# 2) DM_FOS
+# 3) RH_BES
+# 4) SL_BES
+# 5) WGS_454_PE
+
+
+
+## After aligning and filtering (see sub-dirs)...
+
+## We use 'ssaha_to_gff.plx' to get standard 'raw' GFF for the SSAHA
+## aligned data (1-4). In three cases (1,2, and 4), we need to map
+## through a 'header' file to get the appropriate clone ID from the
+## clone end IDs used in the fasta sequence file.
+
+## NOTE, pairing (and annotating) the PE/MPs is done by a separate
+## script. This is convenient, because it allows us to 'map' our
+## low-level alignments in various ways (splitting chimerisms and
+## assembling into ultrascaffolds) and then re-pair (and re-annotate)
+## in the same way.
+
+
+
+## Go time
+
+# 1) DM_BES
+
+HEAD=DM_BES/Data/*.header.tab
+SAHA=DM_BES/Results/*.dfilt.b.d3.c80
+
+ll $HEAD $SAHA
+
+./ssaha_to_gff.plx \
+    --header $HEAD 0 1 \
+    --species DM  --version PGSC0003DMB --source "dund dm bes" \
+    --type "clone end" \
+    $SAHA > GFF/PGSC0003DMB_clone_ends/dmb3_dm_bes.gff
+
+wc -l GFF/PGSC0003DMB_clone_ends/dmb3_dm_bes.gff
+
+
+
+# 2) DM_FOS
+
+HEAD=DM_FOS/Data/*.header.tab
+SAHA=DM_FOS/Results/*.dfilt.b.d3.c80
+
+ll $HEAD $SAHA
+
+./ssaha_to_gff.plx \
+    --header $HEAD 0 1 \
+    --species DM  --version PGSC0003DMB --source "dund dm fos" \
+    --type "clone end" \
+    $SAHA > GFF/PGSC0003DMB_clone_ends/dmb3_dm_fos.gff
+
+wc -l GFF/PGSC0003DMB_clone_ends/dmb3_dm_fos.gff
+
+
+
+# 3) RH_BES
+
+HEAD= # the header here is fine as it is
+SAHA=RH_BES/Results/*.dfilt.qh.d3.c80
+
+./ssaha_to_gff.plx \
+    --species DM --version PGSC0003DMB --source "dund rh bes" \
+    --type "clone end" \
+    $SAHA > GFF/PGSC0003DMB_clone_ends/dmb3_rh_bes.gff
+
+wc -l GFF/PGSC0003DMB_clone_ends/dmb3_rh_bes.gff
+
+
+
+# 4) SL_BES
+
+HEAD=SL_BES/Data/*.tab
+SAHA=SL_BES/Results/*.dfilt.qh.d3.c80
+
+./ssaha_to_gff.plx \
+    --header $HEAD 0 1 \
+    --species DM  --version PGSC0003DMB --source "dund sl clones" \
+    --type "clone end" \
+    $SAHA > GFF/PGSC0003DMB_clone_ends/dmb3_sl_bes.gff
+
+wc -l GFF/PGSC0003DMB_clone_ends/dmb3_sl_bes.gff
+
+
+
+# 5) WGS_454_PE
+
+X=08
+
+X=20
+
+SAHA=WGS_454_PE/Results/PGSC0003DMB_vs_WGS_454_PE_${X}kb.PairStatus.nr.txt.dfilt.b.d3.c80
+TRIM=WGS_454_PE/Results/PGSC0003DMB_vs_WGS_454_PE_${X}kb.*/mapping/454TrimStatus.txt
+READ=WGS_454_PE/Results/PGSC0003DMB_vs_WGS_454_PE_${X}kb.*/mapping/454ReadStatus.txt
+
+./newbler_to_gff.plx -v \
+  --trim $TRIM --read $READ --lib x${X}WGS_ \
+  --species DM  --version PGSC0003DMB --source "dund dm wgs 454 ${X}kb" \
+  --type "clone end" \
+    $SAHA > GFF/PGSC0003DMB_clone_ends/dmb3_dm_wgs_454_pe_${X}kb.gff
+
+wc -l GFF/PGSC0003DMB_clone_ends/dmb3_dm_wgs_454_pe_${X}kb.gff
+
+
+
+
+
+## We are now ready to 'pair' the clone ends
+
+for GFF in \
+    GFF/PGSC0003DMB_clone_ends/dmb3_??_???.gff \
+    GFF/PGSC0003DMB_clone_ends/dmb3_dm_wgs_454_pe_??kb.gff; do
+  
+  ./pair_clone_end_gff.plx -m my.mates \
+      $GFF > GFF/PGSC0003DMB_clone_ends/`basename $GFF .gff`.paired.2.gff
+
+done
+
+
+
+
+
+
+
+
+
+
+
+## LOAD TEST
+
+## Takes about half an hour!
+
+time \
+  bp_seqfeature_load.pl -c \
+    -f -v -z \
+    --dsn dbolser_007:mysql.compbio.dundee.ac.uk \
+    --user dbolser \
+    --pass abc123 \
+    \
+    GFF/PGSC0003DMB_clone_ends/*.paired.gff
+
+
+
+
+
+
+
+
+
+
+## CHIM CHIM!
+
+## See: /homes/dbolser/BiO/Research/Potato/Anchors/Chimerism
+
+for GFF in \
+    GFF/PGSC0003DMB_clone_ends/dmb3_??_???.chim-3.gff \
+    GFF/PGSC0003DMB_clone_ends/dmb3_dm_wgs_454_pe_??kb.chim-3.gff; do
+  echo
+  echo $GFF '>' GFF/PGSC0003DMB_clone_ends/`basename $GFF .gff`.paired.gff
+  
+  ./pair_clone_end_gff.plx -m my.mates \
+      $GFF > GFF/PGSC0003DMB_clone_ends/`basename $GFF .gff`.paired.gff
+  echo
+  echo
+  
+done
+
+
+
+
+## LOAD TEST CHIM
+
+## Takes about 20 mins.
+
+time \
+  bp_seqfeature_load.pl -c \
+    -f -v -z \
+    --dsn dbolser_007:mysql.compbio.dundee.ac.uk \
+    --user dbolser \
+    --pass abc123 \
+    \
+    GFF/PGSC0003DMB_assembly_landmarks.gff \
+    GFF/PGSC0003DMB_assembly_landmarks.chim-3.gff \
+    GFF/PGSC0003DMB_clone_ends/*.chim-3.paired.gff
+
+

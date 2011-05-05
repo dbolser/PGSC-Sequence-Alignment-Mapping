@@ -1,0 +1,44 @@
+
+# A2A Results
+R=Results/ILUvs454.ref\=ILU.clumpCost\=5000.atac.uids
+
+
+
+## List of superscaffolds of interest
+
+
+
+
+## Get scaffold list
+
+perl -ne '
+  next unless /^M c /;
+  my (undef, undef, undef, undef,
+      $hit,  $hpos, undef, undef,
+      $que,  undef, undef, undef,
+     ) = split /\s/;
+  
+#  print "$que\n"
+  print "$hit\t$hpos\t$que\n"
+    if $hit =~ /
+	PGSC0003DMB000000690|
+	PGSC0003DMB000000707|PGSC0003DMB000002557|
+	PGSC0003DMB000000964|PGSC0003DMB000001035|
+	PGSC0003DMB000000719|PGSC0003DMB000001559|
+	PGSC0003DMB000000296|PGSC0003DMB000000330|
+	PGSC0003DMB000000240|PGSC0003DMB000000029
+	/x;
+
+' $R > 454_scaffold.list
+
+
+
+# formatdb -i DM_454_CE_Scaffolds.fna -p F -o T -V
+
+
+fastacmd \
+  -d Data/DM_454_CE_Scaffolds.fna \
+  -i 454_scaffold.list \
+   > 454_scaffold.fa
+
+
