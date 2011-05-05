@@ -144,7 +144,7 @@ while(<>){
          $score,
          $strand,
          '.',
-         $attrs. "ident=$ident;length=$query_len",
+         $attrs. ";ident=$ident;length=$query_len",
         ), "\n";
 }
 
