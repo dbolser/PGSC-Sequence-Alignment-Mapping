@@ -37,9 +37,9 @@ ll $HEAD $SAHA
     --header $HEAD 0 1 \
     --species DM  --version PGSC0003DMB --source "dund dm bes" \
     --type "clone end" \
-    $SAHA > GFF/PGSC0003DMB_clone_ends/dmb3_dm_bes.gff
+    $SAHA > GFF/PGSC0003DMB_clone_ends/dmb3_dm_bes-orig.gff
 
-wc -l GFF/PGSC0003DMB_clone_ends/dmb3_dm_bes.gff
+wc -l GFF/PGSC0003DMB_clone_ends/dmb3_dm_bes-orig.gff
 
 
 
@@ -54,9 +54,9 @@ ll $HEAD $SAHA
     --header $HEAD 0 1 \
     --species DM  --version PGSC0003DMB --source "dund dm fos" \
     --type "clone end" \
-    $SAHA > GFF/PGSC0003DMB_clone_ends/dmb3_dm_fos.gff
+    $SAHA > GFF/PGSC0003DMB_clone_ends/dmb3_dm_fos-orig.gff
 
-wc -l GFF/PGSC0003DMB_clone_ends/dmb3_dm_fos.gff
+wc -l GFF/PGSC0003DMB_clone_ends/dmb3_dm_fos-orig.gff
 
 
 
@@ -65,12 +65,14 @@ wc -l GFF/PGSC0003DMB_clone_ends/dmb3_dm_fos.gff
 HEAD= # the header here is fine as it is
 SAHA=RH_BES/Results/*.dfilt.qh.d3.c80
 
+ll $HEAD $SAHA
+
 ./ssaha_to_gff.plx \
     --species DM --version PGSC0003DMB --source "dund rh bes" \
     --type "clone end" \
-    $SAHA > GFF/PGSC0003DMB_clone_ends/dmb3_rh_bes.gff
+    $SAHA > GFF/PGSC0003DMB_clone_ends/dmb3_rh_bes-orig.gff
 
-wc -l GFF/PGSC0003DMB_clone_ends/dmb3_rh_bes.gff
+wc -l GFF/PGSC0003DMB_clone_ends/dmb3_rh_bes-orig.gff
 
 
 
@@ -79,13 +81,15 @@ wc -l GFF/PGSC0003DMB_clone_ends/dmb3_rh_bes.gff
 HEAD=SL_BES/Data/*.tab
 SAHA=SL_BES/Results/*.dfilt.qh.d3.c80
 
+ll $HEAD $SAHA
+
 ./ssaha_to_gff.plx \
     --header $HEAD 0 1 \
     --species DM  --version PGSC0003DMB --source "dund sl clones" \
     --type "clone end" \
-    $SAHA > GFF/PGSC0003DMB_clone_ends/dmb3_sl_bes.gff
+    $SAHA > GFF/PGSC0003DMB_clone_ends/dmb3_sl_bes-orig.gff
 
-wc -l GFF/PGSC0003DMB_clone_ends/dmb3_sl_bes.gff
+wc -l GFF/PGSC0003DMB_clone_ends/dmb3_sl_bes-orig.gff
 
 
 
@@ -103,9 +107,9 @@ READ=WGS_454_PE/Results/PGSC0003DMB_vs_WGS_454_PE_${X}kb.*/mapping/454ReadStatus
   --trim $TRIM --read $READ --lib x${X}WGS_ \
   --species DM  --version PGSC0003DMB --source "dund dm wgs 454 ${X}kb" \
   --type "clone end" \
-    $SAHA > GFF/PGSC0003DMB_clone_ends/dmb3_dm_wgs_454_pe_${X}kb.gff
+    $SAHA > GFF/PGSC0003DMB_clone_ends/dmb3_dm_wgs_454_pe_${X}kb-orig.gff
 
-wc -l GFF/PGSC0003DMB_clone_ends/dmb3_dm_wgs_454_pe_${X}kb.gff
+wc -l GFF/PGSC0003DMB_clone_ends/dmb3_dm_wgs_454_pe_${X}kb-orig.gff
 
 
 
@@ -114,13 +118,35 @@ wc -l GFF/PGSC0003DMB_clone_ends/dmb3_dm_wgs_454_pe_${X}kb.gff
 ## We are now ready to 'pair' the clone ends
 
 for GFF in \
-    GFF/PGSC0003DMB_clone_ends/dmb3_??_???.gff \
-    GFF/PGSC0003DMB_clone_ends/dmb3_dm_wgs_454_pe_??kb.gff; do
+    GFF/PGSC0003DMB_clone_ends/*-orig.gff; do
   
+  GFFOUT=GFF/PGSC0003DMB_clone_ends/`basename $GFF .gff`.paired.gff
+  echo $GFF '>' $GFFOUT
+
   ./pair_clone_end_gff.plx -m my.mates \
-      $GFF > GFF/PGSC0003DMB_clone_ends/`basename $GFF .gff`.paired.2.gff
+      $GFF > $GFFOUT
 
 done
+
+
+
+
+
+## CHIM CHIM!
+
+## See: BiO/Research/Potato/Anchors/Chimerism
+
+for GFF in \
+    GFF/PGSC0003DMB_clone_ends/*-chim.2.1.9.gff; do
+
+  GFFOUT=GFF/PGSC0003DMB_clone_ends/`basename $GFF .gff`.paired.gff
+  echo $GFF '>' $GFFOUT
+
+  ./pair_clone_end_gff.plx -m my.mates \
+      $GFF > $GFFOUT
+  
+done
+
 
 
 
@@ -144,33 +170,6 @@ time \
     --pass abc123 \
     \
     GFF/PGSC0003DMB_clone_ends/*.paired.gff
-
-
-
-
-
-
-
-
-
-
-## CHIM CHIM!
-
-## See: /homes/dbolser/BiO/Research/Potato/Anchors/Chimerism
-
-for GFF in \
-    GFF/PGSC0003DMB_clone_ends/dmb3_??_???.chim-3.gff \
-    GFF/PGSC0003DMB_clone_ends/dmb3_dm_wgs_454_pe_??kb.chim-3.gff; do
-  echo
-  echo $GFF '>' GFF/PGSC0003DMB_clone_ends/`basename $GFF .gff`.paired.gff
-  
-  ./pair_clone_end_gff.plx -m my.mates \
-      $GFF > GFF/PGSC0003DMB_clone_ends/`basename $GFF .gff`.paired.gff
-  echo
-  echo
-  
-done
-
 
 
 
