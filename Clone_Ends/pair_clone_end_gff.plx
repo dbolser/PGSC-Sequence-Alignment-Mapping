@@ -109,7 +109,7 @@ while(<>){
     
     
     
-    ## Prolly safer to do this with the library regexp!
+    ## TODO: Prolly safer to do this with the library regexp!
     my $base_id = substr($id, 0, -2);
     my $direction = substr($id, -1);
     
