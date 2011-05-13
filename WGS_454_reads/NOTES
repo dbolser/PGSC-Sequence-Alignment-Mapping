@@ -1,0 +1,270 @@
+
+#### GS MAPPER
+
+## Required for QSUB to work properly
+BASEDIR=`pwd`
+
+
+
+### CONFIGURE THE TARGET(S)
+
+TARGET=$BASEDIR/Assembly/PGSC0003DM/istvans.list.fa
+
+## OR
+
+TARGETS=(
+  $BASEDIR/Assembly/PGSC0003DM/PGSC0003DMB000000029.fa
+  $BASEDIR/Assembly/PGSC0003DM/PGSC0003DMB000000240.fa
+  $BASEDIR/Assembly/PGSC0003DM/PGSC0003DMB000000296.fa
+  $BASEDIR/Assembly/PGSC0003DM/PGSC0003DMB000000330.fa
+  $BASEDIR/Assembly/PGSC0003DM/PGSC0003DMB000000690.fa
+  $BASEDIR/Assembly/PGSC0003DM/PGSC0003DMB000000707.fa
+  $BASEDIR/Assembly/PGSC0003DM/PGSC0003DMB000000719.fa
+  $BASEDIR/Assembly/PGSC0003DM/PGSC0003DMB000000964.fa
+  $BASEDIR/Assembly/PGSC0003DM/PGSC0003DMB000001559.fa
+)
+
+# TEST
+ls ${TARGETS[@]}
+
+
+
+### CONFIGURATION
+
+GSMAPPER=/sw/local/src/dbolser/454/bin/runMapping
+
+
+
+### QUERY
+
+## SE and PE
+SE=$BASEDIR/Data/SFF/*.sff
+PE=$BASEDIR/Data/Paired_SFF/*.sff
+
+
+
+### RESULTS
+
+RESULTS=$BASEDIR/Results/`basename $TARGET .fa`_vs_WGS_454_reads
+
+
+
+
+
+### RUN(S)
+
+## ALL READS VS ALL SEQUENCES 
+## (FAILS DUE TO MEMORY LIMITS)
+
+qsub -q 64bit.q -b y -l ram=14000M \
+    -o $RESULTS.out \
+    -e $RESULTS.err \
+$GSMAPPER -nrm -nobig \
+    -o $RESULTS \
+       $TARGET $SE $PE
+
+
+
+
+
+## READ SETS VS ALL SEQUENCES
+## (RUNS, BUT NOT IDEAL FOR CONTIGS)
+
+for QUERY in $SE $PE; do
+    echo $QUERY
+
+    SFF_ID=`basename $QUERY .sff`
+
+    qsub -q 64bit.q -b y -l ram=10000M \
+      -o $RESULTS.$SFF_ID.out \
+      -e $RESULTS.$SFF_ID.err \
+    $GSMAPPER -nrm -nobig \
+      -o $RESULTS.$SFF_ID \
+	 $TARGET $QUERY
+done
+
+
+
+
+
+## ALL READS VS INDIVIDUAL SEQUENCES
+## (I HOPE THIS WORKS!)
+
+for TARGET_I in ${TARGETS[@]}; do
+    echo $TARGET_I
+
+    T_ID=`basename $TARGET_I .fa`
+
+    qsub -q 64bit.q -b y -l ram=14000M \
+	-o $RESULTS.$T_ID.out \
+	-e $RESULTS.$T_ID.err \
+    $GSMAPPER -nrm -nobig \
+	-o $RESULTS.$T_ID \
+	   $TARGET $SE $PE
+done
+
+
+
+
+
+
+
+
+
+
+
+
+
+# Test
+qstat -u dbolser
+
+
+
+
+## Get all the large mapped contigs...
+
+cat Results/istvans.list_vs_WGS_454_reads.*/mapping/454LargeContigs.fna \
+> all454LargeContigs.fna
+
+cat Results/istvans.list_vs_WGS_454_reads.*/mapping/454LargeContigs.qual \
+> all454LargeContigs.qual
+
+
+
+
+
+## Get a list of all the mapped read IDs:
+
+perl -ne '
+  @x=split;
+  print $x[0], "\n"
+    if $x[1] eq "Full"
+
+' Results/*/mapping/454ReadStatus.txt \
+> mapped_list.txt
+
+
+perl -ne '
+  die unless /^([FG].{13})(_(left|right))?/;
+  print "$1\n"
+' mapped_list.txt \
+> mapped_list.filt.txt
+
+
+
+## Make an SFF file from this set...
+
+sfffile \
+  -i mapped_list.filt.txt \
+  -o Results/mapped_list.sff \
+     Data/SFF/*.sff \
+     Data/Paired_SFF/*.sff
+
+
+
+
+
+## GO AGAIN BUT LIBRARY SPECIFIC!
+
+## Get a list of all the mapped read IDs:
+
+perl -ne '
+  @x=split;
+  print $x[0], "\n"
+    if $x[1] eq "Full"
+' \
+ Results/istvans.list_vs_WGS_454_reads.F34YKD402/mapping/454ReadStatus.txt \
+ Results/istvans.list_vs_WGS_454_reads.F4M90WV02/mapping/454ReadStatus.txt \
+ Results/istvans.list_vs_WGS_454_reads.F64AD3K01/mapping/454ReadStatus.txt \
+ Results/istvans.list_vs_WGS_454_reads.GBSKQZK02/mapping/454ReadStatus.txt \
+ Results/istvans.list_vs_WGS_454_reads.GBSX3HF01/mapping/454ReadStatus.txt \
+> mapped_list.20kb.txt
+
+perl -ne '
+  die unless /^([FG].{13})(_(left|right))?/;
+  print "$1\n"
+' mapped_list.20kb.txt \
+> mapped_list.20kb.filt.txt
+
+sfffile \
+  -i mapped_list.20kb.filt.txt \
+  -o Results/mapped_list.20kb.sff \
+     Data/SFF/*.sff \
+     Data/Paired_SFF/*.sff
+
+
+
+perl -ne '
+  @x=split;
+  print $x[0], "\n"
+    if $x[1] eq "Full"
+' \
+ Results/istvans.list_vs_WGS_454_reads.F2K9UYJ04/mapping/454ReadStatus.txt \
+ Results/istvans.list_vs_WGS_454_reads.F3R7RWZ01/mapping/454ReadStatus.txt \
+ Results/istvans.list_vs_WGS_454_reads.F3R7RWZ02/mapping/454ReadStatus.txt \
+ Results/istvans.list_vs_WGS_454_reads.F5IUTHY01/mapping/454ReadStatus.txt \
+ Results/istvans.list_vs_WGS_454_reads.F5IUTHY02/mapping/454ReadStatus.txt \
+> mapped_list.15kb.txt
+
+perl -ne '
+  die unless /^([FG].{13})(_(left|right))?/;
+  print "$1\n"
+' mapped_list.15kb.txt \
+> mapped_list.15kb.filt.txt
+
+sfffile \
+  -i mapped_list.15kb.filt.txt \
+  -o Results/mapped_list.15kb.sff \
+     Data/SFF/*.sff \
+     Data/Paired_SFF/*.sff
+
+
+
+perl -ne '
+  @x=split;
+  print $x[0], "\n"
+    if $x[1] eq "Full"
+' \
+Results/istvans.list_vs_WGS_454_reads.F0C8ALM01/mapping/454ReadStatus.txt \
+Results/istvans.list_vs_WGS_454_reads.F0C8ALM02/mapping/454ReadStatus.txt \
+Results/istvans.list_vs_WGS_454_reads.F4M90WV02/mapping/454ReadStatus.txt \
+Results/istvans.list_vs_WGS_454_reads.F64MBFR01/mapping/454ReadStatus.txt \
+Results/istvans.list_vs_WGS_454_reads.F64MBFR02/mapping/454ReadStatus.txt \
+Results/istvans.list_vs_WGS_454_reads.F6522BV01/mapping/454ReadStatus.txt \
+Results/istvans.list_vs_WGS_454_reads.F6522BV02/mapping/454ReadStatus.txt \
+Results/istvans.list_vs_WGS_454_reads.F7DG4KD01/mapping/454ReadStatus.txt \
+Results/istvans.list_vs_WGS_454_reads.F7DTTJS01/mapping/454ReadStatus.txt \
+Results/istvans.list_vs_WGS_454_reads.F7DTTJS02/mapping/454ReadStatus.txt \
+Results/istvans.list_vs_WGS_454_reads.F7IO22A01/mapping/454ReadStatus.txt \
+Results/istvans.list_vs_WGS_454_reads.FUBJ29X06/mapping/454ReadStatus.txt \
+Results/istvans.list_vs_WGS_454_reads.FVF7ZWH02/mapping/454ReadStatus.txt \
+Results/istvans.list_vs_WGS_454_reads.FVHYY0U02/mapping/454ReadStatus.txt \
+Results/istvans.list_vs_WGS_454_reads.FVJ1ER001/mapping/454ReadStatus.txt \
+Results/istvans.list_vs_WGS_454_reads.FVJ1ER002/mapping/454ReadStatus.txt \
+Results/istvans.list_vs_WGS_454_reads.FVPCPC304/mapping/454ReadStatus.txt \
+Results/istvans.list_vs_WGS_454_reads.FX0ORXM01/mapping/454ReadStatus.txt \
+Results/istvans.list_vs_WGS_454_reads.FX0ORXM02/mapping/454ReadStatus.txt \
+Results/istvans.list_vs_WGS_454_reads.FX0QVYF01/mapping/454ReadStatus.txt \
+Results/istvans.list_vs_WGS_454_reads.FX0QVYF02/mapping/454ReadStatus.txt \
+Results/istvans.list_vs_WGS_454_reads.FX2IINF01/mapping/454ReadStatus.txt \
+Results/istvans.list_vs_WGS_454_reads.FX2IINF02/mapping/454ReadStatus.txt \
+Results/istvans.list_vs_WGS_454_reads.FZ9I06O01/mapping/454ReadStatus.txt \
+Results/istvans.list_vs_WGS_454_reads.FZ9I06O02/mapping/454ReadStatus.txt \
+Results/istvans.list_vs_WGS_454_reads.FZFX41401/mapping/454ReadStatus.txt \
+Results/istvans.list_vs_WGS_454_reads.FZFX41402/mapping/454ReadStatus.txt \
+Results/istvans.list_vs_WGS_454_reads.FZLPAVW01/mapping/454ReadStatus.txt \
+Results/istvans.list_vs_WGS_454_reads.FZSXW8S01/mapping/454ReadStatus.txt \
+Results/istvans.list_vs_WGS_454_reads.FZSXW8S02/mapping/454ReadStatus.txt \
+> mapped_list.se.txt
+
+perl -ne '
+  die unless /^([FG].{13})(_(left|right))?/;
+  print "$1\n"
+' mapped_list.se.txt \
+> mapped_list.se.filt.txt
+
+sfffile \
+  -i mapped_list.se.filt.txt \
+  -o Results/mapped_list.se.sff \
+     Data/SFF/*.sff \
+     Data/Paired_SFF/*.sff
