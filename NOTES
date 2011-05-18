@@ -1,4 +1,8 @@
 
+## See also:
+# 
+
+
 ## QUERY (FASTA)
 QUERY=Data/Solanum_phureja_DM.bac_ends.09242009.fsa
 
@@ -46,6 +50,19 @@ ls \
 
 ## Step 2) Run the QUERY sequences against the ASSEMBLY
 
+# PWD=`pwd`
+
+# qsub \
+#   -q 64bit.q -b n -l ram=4000M \
+#   -o $PWD/$RESULTS.out \
+#   -e $PWD/$RESULTS.err \
+#   \
+# $PWD/runSSAHA.plx \
+#   $SSAHA_R \
+#   $PWD/$SSAHAIDX \
+#   $PWD/$QUERY \
+#   $PWD/$RESULTS
+
 $SSAHA_R -tags 0 \
  -save $SSAHAIDX $QUERY \
  | perl -ne '
@@ -55,9 +72,10 @@ $SSAHA_R -tags 0 \
 
 
 
-## Replace the white-space field terminators with tabs
+## Replace the white-space field terminators with tabs. Not required
+## if using 'runSSAHA'.
 
-sed -ri 's/\s+/\t/g' $RESULTS
+# sed -ri 's/\s+/\t/g' $RESULTS
 
 
 
@@ -68,24 +86,59 @@ sed -ri 's/\s+/\t/g' $RESULTS
 DF=~/BiO/Util/depth_filter.plx
 
 
-## QUERY
+
+# ## TEST 'BOTH' ON CLUSTER
+# 
+# PWD=`pwd`
+# 
+# qsub \
+#   -q 64bit.q -b n -l ram=12000M \
+#   -o $PWD/$RESULTS.dfilt.out \
+#   -e $PWD/$RESULTS.dfilt.err \
+#   \
+# $DF -d 3 -c .80 -t both \
+#   $PWD/$RESULTS \
+# > $PWD/$RESULTS.dfilt.b.d3.c80
+
+
+
+## QUERY (RUNS)
 $DF -d 5 -c .80 -t query $RESULTS > $RESULTS.dfilt.q.d5.c80
+$DF -d 4 -c .80 -t query $RESULTS > $RESULTS.dfilt.q.d4.c80
 $DF -d 3 -c .80 -t query $RESULTS > $RESULTS.dfilt.q.d3.c80
 
 ## This step removes a massive number of alignments!
 wc -l $RESULTS                  # 5912272
 wc -l $RESULTS.dfilt.q.d5.c80   #  198463
+wc -l $RESULTS.dfilt.q.d4.c80   #   
 wc -l $RESULTS.dfilt.q.d3.c80   #  140902
+
 
 
 ## HIT
 $DF -d 5 -c .80 -t hit   $RESULTS > $RESULTS.dfilt.h.d5.c80
+$DF -d 4 -c .80 -t hit   $RESULTS > $RESULTS.dfilt.h.d4.c80
 $DF -d 3 -c .80 -t hit   $RESULTS > $RESULTS.dfilt.h.d3.c80
 
 ## This step removes a massive number of alignments!
 wc -l $RESULTS                  # 5912272
 wc -l $RESULTS.dfilt.h.d5.c80   #  475517
+wc -l $RESULTS.dfilt.h.d4.c80   #   
 wc -l $RESULTS.dfilt.h.d3.c80   #  284182
+
+
+
+## BOTH 0
+$DF -d 5 -c .80 -t both  $RESULTS > $RESULTS.dfilt.b.d5.c80
+$DF -d 4 -c .80 -t both  $RESULTS > $RESULTS.dfilt.b.d4.c80
+$DF -d 3 -c .80 -t both  $RESULTS > $RESULTS.dfilt.b.d3.c80
+
+## This step removes a massive number of alignments!
+wc -l $RESULTS                  #  564581
+wc -l $RESULTS.dfilt.b.d5.c80   #   17974
+wc -l $RESULTS.dfilt.b.d4.c80   #   16785
+wc -l $RESULTS.dfilt.b.d3.c80   #   14948
+
 
 
 ## BOTH 1
@@ -131,11 +184,10 @@ wc -l $RESULTS.dfilt.b2.d5.c80  #  134891
 
 ## Just make a GFF...
 
-./to_gff.plx --source 'dund dm bes' \
+./to_gff.plx --source 'dund dm' \
   $RESULTS.dfilt.b.d3.c80 \
 > GFF/`basename $RESULTS`.dfilt.b.d3.c80.gff
 
-#dumping GFF
 #bad ori, away   37
 #missing seq     13735
 #GOOD PAIR!      24517
@@ -146,9 +198,7 @@ wc -l $RESULTS.dfilt.b2.d5.c80  #  134891
 #OK
 
 wc -l \
-  GFF/`basename $RESULTS`.dfilt.b.d3.c80.gff
-
-
+  GFF/`basename $RESULTS`.dfilt.b.d3.c80.gff # 84202
 
 
 
