@@ -1,51 +1,51 @@
 
-library	x08WGS	10000	20000	^x08WGS_(..............)_(F|R)$
+library	x08WGS	10000	20000	^x08WGS_(..............)(_(F|R))?$
 pair	(.*)_F$	(.*)_R$
 
-library	x20WGS	12000	30000	^x20WGS_(..............)_(F|R)$
-pair	(.*)_F$	(.*)_R$
-
-
-
-library	DMBES	60000	180000	^(LuSp\d{3}[A-P]\d{2})_(F|R)$
-pair	(.*)_F$	(.*)_R$
-
-library	DMFOS	20000	60000	^(\d{13})_(F|R)$
+library	x20WGS	12000	30000	^x20WGS_(..............)(_(F|R))?$
 pair	(.*)_F$	(.*)_R$
 
 
 
-library	RHBES	50000	200000	^(RH......)_(F|R)$
+library	DMBES	60000	180000	^(LuSp\d{3}[A-P]\d{2})(_(F|R))?$
 pair	(.*)_F$	(.*)_R$
 
-#library	SLBES	50000	200000	^((?:HB|SL|LP)\w\d{4}[A-P]\d{2})_(F|R)$
-#pair	(.*)_F$	(.*)_R$
-
-
-
-## Values for insert length were set using 10% and 90% quantiles,
-## created after analysing the resulting PE distances
-
-library	HBa	45000	146000	^(HBa\d{4}[A-P]\d{2})_(F|R)$
+library	DMFOS	20000	60000	^(\d{13})(_(F|R))?$
 pair	(.*)_F$	(.*)_R$
 
-library	SLm	92000	155000	^(SLm\d{4}[A-P]\d{2})_(F|R)$
+
+
+library	RHBES	50000	200000	^(RH......)(_(F|R))?$
 pair	(.*)_F$	(.*)_R$
 
-library	SLe	81000	132000	^(SLe\d{4}[A-P]\d{2})_(F|R)$
+library	SLBES	50000	200000	^((?:HB|SL|LP)\w\d{4}[A-P]\d{2})(_(F|R))?$
 pair	(.*)_F$	(.*)_R$
 
-library	SLf	33000	 42000	^(SLf\d{4}[A-P]\d{2})_(F|R)$
-pair	(.*)_F$	(.*)_R$
 
-library	SLs	70000	123000	^(SLs\d{4}[A-P]\d{2})_(F|R)$
-pair	(.*)_F$	(.*)_R$
 
-library	SLt	84000	120000	^(SLt\d{4}[A-P]\d{2})_(F|R)$
-pair	(.*)_F$	(.*)_R$
+# ## Values for insert length were set using 10% and 90% quantiles,
+# ## created after analysing the resulting PE distances
 
-library	LPc	94000	144000	^(LPc\d{4}[A-P]\d{2})_(F|R)$
-pair	(.*)_F$	(.*)_R$
+# library	HBa	45000	146000	^(HBa\d{4}[A-P]\d{2})(_(F|R))?$
+# pair	(.*)_F$	(.*)_R$
 
-library	LPb	60000	134000	^(LPb\d{4}[A-P]\d{2})_(F|R)$
-pair	(.*)_F$	(.*)_R$
+# library	SLm	92000	155000	^(SLm\d{4}[A-P]\d{2})(_(F|R))?$
+# pair	(.*)_F$	(.*)_R$
+
+# library	SLe	81000	132000	^(SLe\d{4}[A-P]\d{2})(_(F|R))?$
+# pair	(.*)_F$	(.*)_R$
+
+# library	SLf	33000	 42000	^(SLf\d{4}[A-P]\d{2})(_(F|R))?$
+# pair	(.*)_F$	(.*)_R$
+
+# library	SLs	70000	123000	^(SLs\d{4}[A-P]\d{2})(_(F|R))?$
+# pair	(.*)_F$	(.*)_R$
+
+# library	SLt	84000	120000	^(SLt\d{4}[A-P]\d{2})(_(F|R))?$
+# pair	(.*)_F$	(.*)_R$
+
+# library	LPc	94000	144000	^(LPc\d{4}[A-P]\d{2})(_(F|R))?$
+# pair	(.*)_F$	(.*)_R$
+
+# library	LPb	60000	134000	^(LPb\d{4}[A-P]\d{2})(_(F|R))?$
+# pair	(.*)_F$	(.*)_R$
