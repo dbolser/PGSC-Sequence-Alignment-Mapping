@@ -137,55 +137,17 @@ done
 ## See: BiO/Research/Potato/Anchors/Chimerism
 
 SUF=chim.2.1.9
+SUF=beta
+
 SUF=agp.3.0
 
-for GFF in \
-    GFF/PGSC0003DMB_clone_ends/*-$SUF.gff; do
-  
-  GFFOUT=GFF/PGSC0003DMB_clone_ends/`basename $GFF .gff`.paired.gff
-  echo $GFF '>' $GFFOUT
-  
-  ./pair_clone_end_gff.plx -m my.mates \
-      $GFF > $GFFOUT
-  
-done
+./pair_clone_end_gff.plx -m my.mates \
+    GFF/PGSC0003DMB_clone_ends-$SUF.gff \
+  > GFF/PGSC0003DMB_clone_ends-$SUF.paired.gff  
 
 
 
-
-
-
-
-
-
-
-## LOAD PAIRED END DATA!
-
-## LOAD data (used by peak to peak script)
-
-## Takes about 20 mins
-
-time \
-\
-bp_seqfeature_load.pl --create \
-    -f -v -z \
-    --dsn dbolser_007:mysql.compbio.dundee.ac.uk \
-    --namespace orig \
-    --user dbolser \
-    --pass abc123 \
-    \
-    GFF/PGSC0003DMB_assembly_landmarks.gff \
-    GFF/PGSC0003DMB_clone_ends/*-orig.paired.gff
-
-
-
-
-
-## CHIM CHIM
-
-## LOAD data (used by peak to peak script)
-
-## Takes about 20 mins
+## LOAD PAIRED END DATA! (where is this used?)
 
 SUG=`echo $SUF | sed s/\\\./_/g`
 
@@ -198,8 +160,5 @@ bp_seqfeature_load.pl --create \
     --user dbolser \
     --pass abc123 \
     \
-    GFF/PGSC0003DMB_assembly_landmarks.gff \
-    GFF/PGSC0003DMB_clone_ends/*-$SUF.paired.gff
-
-
     GFF/PGSC0003DMB_assembly_landmarks-$SUF.gff \
+    GFF/PGSC0003DMB_clone_ends-$SUF.paired.gff
