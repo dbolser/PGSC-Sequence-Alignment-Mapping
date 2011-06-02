@@ -185,28 +185,4 @@ wc -l $RESULTS.dfilt.b2.d3.c80  #  131992
 
 ## Just make a GFF...
 
-./to_gff.plx --source 'dund sl' \
-  $RESULTS.dfilt.qh.d3.c80 \
-> GFF/`basename $RESULTS`.dfilt.qh.d3.c80.gff
-
-# bad ori, away   34
-# GOOD PAIR!      8135
-# too short       28
-# no align        309506
-# bad ori, para   311
-# too long        12
-# OK
-
-wc -l \
-  GFF/`basename $RESULTS`.dfilt.qh.d3.c80.gff # 42460
-
-
-
-## Load it into GB?
-
-## See ../NOTES
-
-
-
-
-
+## See ../
