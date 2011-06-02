@@ -13,25 +13,25 @@ short or very long pairs, so they will never be seen!
 
 use Getopt::Long;
 
+## Set the source field, if desired
 my $source_tag = 'dundee';
 
-GetOptions( "source=s" => \$source_tag,
-	    #"x" => \$x,
-	  )
-  or die "failed to communicate\n";
+## Set to 1 to enable debugging output
+my $verbose = 0;
+
+GetOptions( "source=s"  => \$source_tag,
+            "v"         => \$verbose,
+          )
+  or die "failed to communicate!\n";
 
 
 
+## We expect to be passed the (filtered) SSAHA2 alignment file(s)
 
-
-## We expect to be passed the SSAHA2 alignment file for the FES
 die "pass ssaha file\n"
   unless @ARGV;
 
 
-
-## Set to 1 to enable debugging output
-my $verbose = 0;
 
 
 
@@ -140,10 +140,10 @@ foreach my $clone (keys %sequence_pairs){
   
   
   
-  ## Failure accounting.
+  ## Failure accounting
 
   ## Hits for both ends? If not, we give up now (we don't want to
-  ## 'pollute' the GFF with these kinds of problem).
+  ## 'pollute' the GFF with these kinds of problem)
   
   if(scalar @hits1 == 0){
     if($query_id1 eq 'seq missing'){
@@ -152,7 +152,6 @@ foreach my $clone (keys %sequence_pairs){
     else{
       $fail{'no align'}++;
     }
-    next; # Fail!
   }
   if(scalar @hits2 == 0){
     if($query_id2 eq 'seq missing'){
@@ -161,9 +160,8 @@ foreach my $clone (keys %sequence_pairs){
     else{
       $fail{'no align'}++;
     }
-    next; # Fail!
   }
-  
+  next unless @hits1 && @hits2;
   
   
   ## Try to pair the hits (best hits first)
@@ -198,40 +196,40 @@ foreach my $clone (keys %sequence_pairs){
     ## Check orientation 1/2
     if ($st1 eq 'F'){
       if ($st2 ne 'C'){
-	## Debugging
-	print "W:\tincorrect orientation (parallel)\n"
-	  if $verbose > 0;
-	$fail{'bad ori, para'}++;
-	next;
+        ## Debugging
+        print "W:\tincorrect orientation (parallel)\n"
+          if $verbose > 0;
+        $fail{'bad ori, para'}++;
+        next;
       }
       
       ## OK. Check their distance
       my $bes_distance = $he2 - $hs1 + 1;
       print "I:\tdistance is $bes_distance\n"
-	if $verbose > 0;
+        if $verbose > 0;
       
       if ($bes_distance < 5_000){
-	if ($bes_distance < 0){
-	  ## Debugging
-	  print "W:\tincorrect orientation, (away)\n"
-	    if $verbose > 0;
-	  $fail{'bad ori, away'}++;
-	}
-	else{
-	  ## Debugging
-	  print "W:\ttoo short\n"
-	    if $verbose > 0;
-	  $fail{'too short'}++;
-	}
-	next;
+        if ($bes_distance < 0){
+          ## Debugging
+          print "W:\tincorrect orientation, (away)\n"
+            if $verbose > 0;
+          $fail{'bad ori, away'}++;
+        }
+        else{
+          ## Debugging
+          print "W:\ttoo short\n"
+            if $verbose > 0;
+          $fail{'too short'}++;
+        }
+        next;
       }
       
       if ($bes_distance > 500_000){
-	## Debugging
-	print "W:\ttoo long!\n"
-	  if $verbose > 0;
-	$fail{'too long'}++;
-	next;
+        ## Debugging
+        print "W:\ttoo long!\n"
+          if $verbose > 0;
+        $fail{'too long'}++;
+        next;
       }
       
       ## OK! Print three lines of GFF
@@ -249,40 +247,40 @@ foreach my $clone (keys %sequence_pairs){
     ## Check orientation 2/2
     if ($st1 eq 'C'){
       if ($st2 ne 'F'){
-	## Debugging
-	print "W:\tincorrect orientation (parallel)\n"
-	  if $verbose > 0;
-	$fail{'bad ori, para'}++;
-	next;
+        ## Debugging
+        print "W:\tincorrect orientation (parallel)\n"
+          if $verbose > 0;
+        $fail{'bad ori, para'}++;
+        next;
       }
       
       ## OK. Check their distance
       my $bes_distance = $he1 - $hs2 + 1;
       print "I:\tdistance is $bes_distance\n"
-	if $verbose > 0;
+        if $verbose > 0;
       
       if ($bes_distance < 5_000){
-	if ($bes_distance < 0){
-	  ## Debugging
-	  print "W:\tincorrect orientation, (away)\n"
-	    if $verbose > 0;
-	  $fail{'bad ori, away'}++;
-	}
-	else{
-	  ## Debugging
-	  print "W:\ttoo short\n"
-	    if $verbose > 0;
-	  $fail{'too short'}++;
-	}
-	next;
+        if ($bes_distance < 0){
+          ## Debugging
+          print "W:\tincorrect orientation, (away)\n"
+            if $verbose > 0;
+          $fail{'bad ori, away'}++;
+        }
+        else{
+          ## Debugging
+          print "W:\ttoo short\n"
+            if $verbose > 0;
+          $fail{'too short'}++;
+        }
+        next;
       }
       
       if ($bes_distance > 500_000){
-	## Debugging
-	print "W:\ttoo long!\n"
-	  if $verbose > 0;
-	$fail{'too long'}++;
-	next;
+        ## Debugging
+        print "W:\ttoo long!\n"
+          if $verbose > 0;
+        $fail{'too long'}++;
+        next;
       }
       
       ## OK! Print three lines of GFF
@@ -312,24 +310,28 @@ foreach my $clone (keys %sequence_pairs){
   print join("\t", '2:', @$hit2), "\n" if $verbose > 0;
   
   ## ONE (Forward)
-  if($st1 eq 'F'){
+  if(0){}
+  elsif($st1 eq 'F'){
     print join("\t", $hn1, "$source_tag link", 'Fosmid', $hs1, $he1+1000,  '.', '+', '.', "ID=$clone.TF;Name=$clone.TF;Note=Other end matches $hn2"), "\n";
-    print join("\t", $hn1, "$source_tag link", 'FES',    $hs1, $he1,      $sc1, '+', '.', "ID=$query_id1;Parent=$clone.TF"), "\n";
+    print join("\t", $hn1, "$source_tag link", 'FES',    $hs1, $he1,      $sc1, '+', '.', "Parent=$clone.TF"), "\n";
   }
-  if($st1 eq 'C'){
+  elsif($st1 eq 'C'){
     print join("\t", $hn1, "$source_tag link", 'Fosmid', $hs1-1000, $he1,  '.', '-', '.', "ID=$clone.TF;Name=$clone.TF;Note=Other end matches $hn2"), "\n";
-    print join("\t", $hn1, "$source_tag link", 'FES',    $hs1,      $he1, $sc1, '-', '.', "ID=$query_id1;Parent=$clone.TF"), "\n";
+    print join("\t", $hn1, "$source_tag link", 'FES',    $hs1,      $he1, $sc1, '-', '.', "Parent=$clone.TF"), "\n";
   }
+  else{die}
   
   ## TWO (Reverse)
-  if($st2 eq 'F'){
+  if(0){}
+  elsif($st2 eq 'F'){
     print join("\t", $hn2, "$source_tag link", 'Fosmid', $hs2, $he2+1000,  '.', '-', '.', "ID=$clone.TR;Name=$clone.TR;Note=Other end matches $hn1"), "\n";
-    print join("\t", $hn2, "$source_tag link", 'FES',    $hs2, $he2,      $sc2, '+', '.', "ID=$query_id2;Parent=$clone.TR"), "\n";
+    print join("\t", $hn2, "$source_tag link", 'FES',    $hs2, $he2,      $sc2, '+', '.', "Parent=$clone.TR"), "\n";
   }
-  if($st2 eq 'C'){
+  elsif($st2 eq 'C'){
     print join("\t", $hn2, "$source_tag link", 'Fosmid', $hs2-1000, $he2,  '.', '+', '.', "ID=$clone.TR;Name=$clone.TR;Note=Other end matches $hn1"), "\n";
-    print join("\t", $hn2, "$source_tag link", 'FES',    $hs2,      $he2, $sc2, '-', '.', "ID=$query_id2;Parent=$clone.TR"), "\n";
+    print join("\t", $hn2, "$source_tag link", 'FES',    $hs2,      $he2, $sc2, '-', '.', "Parent=$clone.TR"), "\n";
   }
+  else{die}
 }
 
 
