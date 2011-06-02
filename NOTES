@@ -184,44 +184,4 @@ wc -l $RESULTS.dfilt.b2.d5.c80  #
 
 ## Just make a GFF...
 
-./to_gff.plx --source 'dund dm' \
-  $RESULTS.dfilt.b.d3.c80 \
-> GFF/`basename $RESULTS`.dfilt.b.d3.c80.gff
-
-# bad ori, away   
-# missing seq     
-# GOOD PAIR!      
-# too short       
-# no align        
-# bad ori, para   
-# too long        
-# OK
-
-wc -l \
-  GFF/`basename $RESULTS`.dfilt.b.d3.c80.gff
-
-
-
-## Load it into GB?
-
-## See ../NOTES
-
-
-
-
-
-## NOTE! (out of date, doesn't include HIT repeat filter)
-
-From the 10,240 DM Fosmids, there are 20,480 FES (in theory).
-
-We have sequences for 19,835 FES, i.e. 645 or 3% are 'missing'.
-
-Of these 19,835 FES:
-We have alignments for 19,788 FES, i.e. 47 or 0% fail to align.
-
-After filtering:
-We have alignments for 15,367 FES, i.e. 4,421 or 22% are rejected.
-
-
-The total drop off is 5,113 FES or 25% of the ideal 20,480.
-
+## See ../to_gff.plx
