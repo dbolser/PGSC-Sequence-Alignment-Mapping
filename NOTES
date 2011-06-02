@@ -1,7 +1,6 @@
 
 ## See also:
-../../Blast/Tomato_BES_Vs_Pot_Illumina/
-
+# ../../Blast/Tomato_BES_Vs_Pot_Illumina/
 
 
 ## QUERY (FASTA)
@@ -51,28 +50,25 @@ ls \
 
 ## Step 2) Run the QUERY sequences against the ASSEMBLY
 
-PWD=`pwd`
+# PWD=`pwd`
 
-qsub \
-  -q 64bit.q -b n -l ram=4000M \
-  -o $PWD/$RESULTS.out \
-  -e $PWD/$RESULTS.err \
-  \
-$PWD/runSSAHA.plx \
-  $SSAHA_R \
-  $PWD/$SSAHAIDX \
-  $PWD/$QUERY \
-  $PWD/$RESULTS
+# qsub \
+#   -q 64bit.q -b n -l ram=4000M \
+#   -o $PWD/$RESULTS.out \
+#   -e $PWD/$RESULTS.err \
+#   \
+# $PWD/runSSAHA.plx \
+#   $SSAHA_R \
+#   $PWD/$SSAHAIDX \
+#   $PWD/$QUERY \
+#   $PWD/$RESULTS
 
-# $SSAHA_R -tags 0 -disk 0 \
-#  -save $SSAHAIDX $QUERY \
-#  | perl -ne '
-#      print if /^\d/
-#    ' \
-#  > $RESULTS
-
-# ## Timed out!
-# RESULTS=Results/`basename $RESULTS .ssaha`.part.ssaha
+$SSAHA_R -tags 0 \
+ -save $SSAHAIDX $QUERY \
+ | perl -ne '
+     print if /^\d/
+   ' \
+ > $RESULTS
 
 
 
@@ -107,24 +103,48 @@ DF=~/BiO/Util/depth_filter.plx
 
 
 ## QUERY (RUNS)
+$DF -d 5 -c .80 -t query $RESULTS > $RESULTS.dfilt.q.d5.c80
+$DF -d 4 -c .80 -t query $RESULTS > $RESULTS.dfilt.q.d4.c80
 $DF -d 3 -c .80 -t query $RESULTS > $RESULTS.dfilt.q.d3.c80
 
 ## This step removes a MASSIVE number of alignments!
 wc -l $RESULTS                  # 9417286
+wc -l $RESULTS.dfilt.q.d5.c80   #   
+wc -l $RESULTS.dfilt.q.d4.c80   #   
 wc -l $RESULTS.dfilt.q.d3.c80   #  207837
 
 
 
 # ## HIT (FAILS... See BOTH 2)
 # $DF -d 3 -c .80 -t hit   $RESULTS > $RESULTS.dfilt.h.d3.c80
+# $DF -d 4 -c .80 -t hit   $RESULTS > $RESULTS.dfilt.h.d4.c80
+# $DF -d 3 -c .80 -t hit   $RESULTS > $RESULTS.dfilt.h.d3.c80
 # 
 # ## This step removes a massive number of alignments!
 # wc -l $RESULTS                  # 9417286
+# wc -l $RESULTS.dfilt.h.d5.c80   #  
+# wc -l $RESULTS.dfilt.h.d4.c80   #  
 # wc -l $RESULTS.dfilt.h.d3.c80   #  
 
 
 
-# ## BOTH (FAILS)
+# ## BOTH 0 (FAILS)
+# $DF -d 5 -c .80 -t both  $RESULTS > $RESULTS.dfilt.b.d5.c80
+# $DF -d 4 -c .80 -t both  $RESULTS > $RESULTS.dfilt.b.d4.c80
+# $DF -d 3 -c .80 -t both  $RESULTS > $RESULTS.dfilt.b.d3.c80
+
+
+# ## This step removes a massive number of alignments!
+# wc -l $RESULTS                  # 9417286
+# wc -l $RESULTS.dfilt.b.d5.c80   # 
+# wc -l $RESULTS.dfilt.b.d4.c80   # 
+# wc -l $RESULTS.dfilt.b.d3.c80   # 
+
+
+
+# ## BOTH 1 (FAILS)
+# 
+# ## This method is better than the method below because...
 # 
 # export RESULTS
 # 
@@ -144,15 +164,20 @@ wc -l $RESULTS.dfilt.q.d3.c80   #  207837
 
 
 ## BOTH 2
-$DF -d 3 -c .80 -t hit   $RESULTS.dfilt.q.d3.c80 > $RESULTS.dfilt.qh.d3.c80
+
+## Above we use settings such that query sequecnes (BES) with multiple
+## alignments to the target sequence are removed (or sub-alignments
+## thereof). However, Some 'unique' pieces of the genome attract many
+## query sequences. These artifacts are seen across BES, FES and 20kb
+## 454 PE alignments, and should therefore be removed.
+
+$DF -d 3 -c .80 -t hit \
+  $RESULTS.dfilt.q.d3.c80 \
+> $RESULTS.dfilt.b2.d3.c80
 
 ## This step removes a massive number of alignments!
 wc -l $RESULTS.dfilt.q.d3.c80   #  207837
-wc -l $RESULTS.dfilt.qh.d3.c80  #  131992
-
-
-
-
+wc -l $RESULTS.dfilt.b2.d3.c80  #  131992
 
 
 
@@ -160,14 +185,10 @@ wc -l $RESULTS.dfilt.qh.d3.c80  #  131992
 
 ## Just make a GFF...
 
-./to_gff.plx --source 'dund sl bes' \
+./to_gff.plx --source 'dund sl' \
   $RESULTS.dfilt.qh.d3.c80 \
 > GFF/`basename $RESULTS`.dfilt.qh.d3.c80.gff
 
-wc -l \
-  GFF/`basename $RESULTS`.dfilt.qh.d3.c80.gff # 42460
-
-# dumping GFF
 # bad ori, away   34
 # GOOD PAIR!      8135
 # too short       28
@@ -176,7 +197,8 @@ wc -l \
 # too long        12
 # OK
 
-
+wc -l \
+  GFF/`basename $RESULTS`.dfilt.qh.d3.c80.gff # 42460
 
 
 
@@ -186,48 +208,5 @@ wc -l \
 
 
 
-
-
-## NOTE! (out of date, doesn't include HIT repeat filter)
-
-From the 85,110 DM BACs, there are 170,220 BES (in theory). 
-
-We have sequences for 156,485 BES, i.e. 13,735 or 8% are 'missing'.
-
-Of these 156,485 BES:
-We have alignments for 153,361 BES, i.e. 3,124 or 2% fail to align.
-
-After filtering:
-We have alignments for 127,601 BES, i.e. 25,760 or 17% are rejected.
-
-
-
-
-## NOTE! (out of date, doesn't include HIT repeat filter)
-
-From the 85,110 DM BACs, there are 170,220 BES (in theory). 
-
-We have sequences for 156,485 BES, i.e. 13,735 or 8% are 'missing'.
-
-Of these 156,485 BES:
-We have alignments for 153,361 BES, i.e. 3,124 or 2% fail to align.
-
-After filtering:
-We have alignments for 127,601 BES, i.e. 25,760 or 17% are rejected.
-
-
-The total drop off is 42,619 BES or 25% of the ideal 170,220.
-
-
-
-
-## NOTE! 
-
-Initially, I processed 'hits' from best to worst, allowing a 'bad
-pair' to be skipped over if a lower scoring 'good pair' could be
-found. In total, only 997 lower scoring 'good pairs' could be found
-after the best scoring 'bad pair'. This is just 3% of the 'good pairs'
-(997), and, because they considerable complicate processing, they are
-now simply discarded.
 
 
