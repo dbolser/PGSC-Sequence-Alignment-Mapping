@@ -1,0 +1,96 @@
+
+Clone_Ends
+
+PE/MP aligned to potato assembly 3
+
+* ASSEMBLY = Assembly/PGSC0003DM/PGSC0003DMB.fa
+
+* DM_BES = LIBGSS_011841 Solanum phureja POTATO-B-01-100-110KB
+* DM_FOS = LIBGSS_011804 Solanum phureja POTATO-F-01-40KB
+* RH_BES = LIBGSS_010743 Solanum tuberosum RHPOTKEY BAC ends
+* SL_BES = Various Solanum Lycopersicum
+
+
+
+PIPELINE:
+
+1) Alignment is done with SSAHA2, using the default 'Sanger' hashing
+  and matching aoptions.
+
+2) The 'raw' SSAHA2 output is filtered using the 'depth_filter.plx'
+  Perl script using a coverage (-c) of 0.8 and a depth (-d) of 3.
+
+3) The 'raw GFF' is generated directly from the filtered SSAHA2
+  alignment results using the 'ssaha_to_gff.plx' Perl script.
+
+4) The 'paired GFF' is generated using the 'raw GFF' and a
+  bambus-style 'mates' file using the 'to_gff.plx' Perl script.
+
+5) The 'paired GFF' is loaded into GBrowse, and is visualized using
+  the 'clone.conf' GB Perl-style configuration
+
+
+
+References:
+
+DM_BES:
+
+A BAC library was constructed by Lucigen from Solanum phureja DM1-3
+516R44 (CIP801092). End sequences were generated using primers in the
+vector (pSMART) using Sanger sequencing at the J Craig Venter
+Institute. All sequences are in GenBank (Accession numbers GS025504
+...). A total of 156,485 sequences are found in this file.
+
+CITATIONS
+Title:          Sequencing of the Solanum phureja doubled monoploid clone,
+                DM1-3 516R44 (CIP801092)
+Authors:        Buell,C.R., Lundback,S.S.
+Year:           2009
+Status:         Unpublished
+
+
+
+DM_FOS:
+
+A fosmid library (40 kb insert sizes) was constructed from Solanum
+phureja DM1-3 516R44 (CIP801092). End sequences were generated using
+primers in the vector (pCC1FOS) using Sanger sequencing at the J Craig
+Venter Institute. All sequences are in GenBank (Accession numbers
+FI900795-FI901529, FI907952-FI927051, GS557234-GS594339,
+GS635316-GS765760). A total of 187,386 sequences are found in this
+file.
+
+CITATIONS
+Title:          Sequencing of the S. phureja doubled monoploid clone, DM1-3
+                516R44 (CIP801092)
+Authors:        Buell,C.R., Lundback,S.S.
+Year:           2009
+Status:         Unpublished
+
+
+
+RH_BES:
+
+A BAC library (library name RHPOTKEY) was constructed by Keygene from
+Solanum tuberosum clone RH89-039-16. The library comprises a mixture
+of EcoRI and HindIII partial digest genomic DNA fragemnts. End
+sequences were generated using primers in the vector (pIndigoBAC-5)
+using Sanger sequencing at the J Craig Venter Institute. All sequences
+are in GenBank (Accession numbers EI367122-EI391525,
+EI812397-EI846477, ER788642-ER870415). A total of 140,259 sequences
+are found in this file.
+
+CITATIONS
+PubMed ID:      18554403 http://www.ncbi.nlm.nih.gov/pubmed/18554403
+Title:          Analysis of 90 Mb of the potato genome reveals conservation
+                of gene structures and order with tomato but divergence in
+                repetitive sequence composition
+Authors:        Zhu,W., Ouyang,S., Iovene,M., O'Brien,K., Vuong,H., Jiang,J.,
+                Buell,C.R.
+Citation:       BMC Genomics 9 (1): 286 2008
+
+
+
+SL_BES:
+
+See...
