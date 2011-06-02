@@ -26,11 +26,11 @@ my $verbose = 0;
 
 ## Parse the command line for options
 GetOptions(
-	   "depth=i"    => \$depthThreshold,
-	   "coverage=f" => \$coverageThreshold,
-	   "infile=s"   => \$file,
-	   "verbose"    => \$verbose,
-	  )
+           "depth=i"    => \$depthThreshold,
+           "coverage=f" => \$coverageThreshold,
+           "infile=s"   => \$file,
+           "verbose"    => \$verbose,
+          )
   or die "could not parse command line for options\n";
 
 $file = $ARGV[0]
