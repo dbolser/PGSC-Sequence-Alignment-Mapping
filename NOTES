@@ -1,131 +1,140 @@
 
-## SSAHA
+## GSMAPPER
 
-## QUERY (FASTA)
-QUERY=Data/Solanum_phureja_DM.bac_ends.09242009.fsa
+BASEDIR=`pwd` # For QSUB
 
-## TARGET (SSAHA INDEX)
-TARGET=../Assembly/PGSC0003DM/Indexes/PGSC0003DMB.sanger
+## TARGET
+TARGET=$BASEDIR/../Assembly/PGSC0003DM/PGSC0003DMB.fa
+
+## QUERY
+QDIR=$BASEDIR/Data/Paired_SFF
 
 
+
+## 08kb
+## The five 8 (15) kb libraries
+QUERIES=(
+  $QDIR/F2K9UYJ04.sff
+  $QDIR/F3R7RWZ01.sff
+  $QDIR/F3R7RWZ02.sff
+  $QDIR/F5IUTHY01.sff
+  $QDIR/F5IUTHY02.sff
+)
 
 ## OUTPUT
+RESULTS=$BASEDIR/Results/`basename $TARGET .fa`_vs_WGS_454_PE_08kb
 
-## Version 3.0
-RESULTS=../Results/`basename $TARGET .sanger`_vs_`basename $QUERY .fsa`.ssaha
+
+## 20kb
+## The five 20 kb libraries
+QUERIES=(
+  $QDIR/F34YKD402.sff
+  $QDIR/F4M90WV02.sff
+  $QDIR/F64AD3K01.sff
+  $QDIR/GBSKQZK02.sff
+  $QDIR/GBSX3HF01.sff
+)
+
+## OUTPUT
+RESULTS=$BASEDIR/Results/`basename $TARGET .fa`_vs_WGS_454_PE_20kb
+
+
+
+
+
+# Test(s)
+ls ${QUERIES[@]}
+ls -d $RESULTS.*
+
 
 
 
 ## RUN
 
-SSAHA=/sw/local/src/dbolser/SSAHA/ssaha2
+GSMAPPER=~/build/454/bin/runMapping
 
-$SSAHA -tags 0 \
- -save $TARGET $QUERY \
- | perl -ne '
-     print if /^\d/
-   ' \
- > $RESULTS
+for QUERY in ${QUERIES[@]}; do
+    echo $QUERY
+    echo $QUERY
 
+    SFF_ID=`basename $QUERY .sff`
 
+    qsub -q 64bit.q -b y -l ram=10000M \
+      -o $RESULTS.$SFF_ID.out \
+      -e $RESULTS.$SFF_ID.err \
+    $GSMAPPER -nrm -nobig -ml 100 -mi 98 \
+      -o $RESULTS.$SFF_ID \
+	 $TARGET $QUERY
 
-## Replace the whitespace field terminators with tabs
-
-sed -ri 's/\s+/\t/g' $RESULTS
-
-
-
-
-
-## REMOVE ALIGNMENTS INVOLVING REPEATS.
-
-DF=~/BiO/Util/depth_filter.plx
-
-$DF -t query -d 5 -c .80 \
-  $RESULTS \
-> $RESULTS.dfilt.q.d5.c80
+done
 
 
-## This step removes a massive number of alignments!
-wc -l $RESULTS                  # 5912272
-wc -l $RESULTS.dfilt.q.d5.c80   #  198463
+
+# Test
+qstat -u dbolser
+
+
+
+## File cleanup?
+## Note, we only actually use '454PairStatus.txt'!
+
+ls      $RESULTS.*/mapping/*.{qual,fna}
+du -csh $RESULTS.*/mapping/*.{qual,fna}
+rm -f   $RESULTS.*/mapping/*.{qual,fna}
+
+
+
+
 
 
 
 ## Just make a GFF...
 
-## First, get a (convenience) list of BES that were permanantly
-## removed due to their repetative nature (this list is used when
-## creating the GFF).
+## Step 1... lets trash dupes!
 
-./list_filt_bes.plx > filt_bes.list
+./trash_dupes_simple.plx \
+  $RESULTS.*/mapping/454PairStatus.txt \
+> $RESULTS.PairStatus.nr.txt
 
+## 08kb
+wc -l $RESULTS.PairStatus.nr.txt # 143262
 
-
-./to_gff.plx \
-  $RESULTS.dfilt.q.d5.c80 \
-> GFF/`basename $RESULTS`.dfilt.q.d5.c80.gff
-
-
-wc -l GFF/`basename $RESULTS`.dfilt.q.d5.c80.gff
-
-
-
-## Load it into GB?
-
-## FAILS... 
-bp_seqfeature_delete.pl --dry-run \
-  --dsn dbi:mysql:www-potato:mysql.compbio.dundee.ac.uk \
-  --user www-potato \
-  --pass abc123 \
-  -t "BAC*" "BES*" | head
-
-
-
-## Load everything from scratch?
-bp_seqfeature_load.pl -c -f -v -z \
-  --summary \
-  --dsn dbi:mysql:www-potato:mysql.compbio.dundee.ac.uk \
-  --user www-potato \
-  --pass abc123 \
-GFF/PGSC0003DMB.gaps.gff \
-GFF/PGSC0003DMB.scaffold.gff \
-GFF/dm.map.gff \
-GFF/tom.map.gff \
-GFF/wgp.map.gff \
-GFF/breaks.gff \
-GFF/align-S_lycopersicum_chromosomes.2.10.fa-PGSC0003DMB.gff \
-GFF/PGSC0003DMB_vs_Solanum_phureja_DM.bac_ends.09242009.ssaha.dfilt.q.d5.c80.v2.gff
+## 20kb
+wc -l $RESULTS.PairStatus.nr.txt # 158133
 
 
 
 
 
-## NOTE!
 
-From the 85,110 DM BACs, there are 170,220 BES (in theory). 
+## REMOVE ALIGNMENTS INVOLVING REPEATS
 
-We have sequences for 156,485 BES, i.e. 13,735 or 8% are 'missing'.
+## GSMapper ensures that all hits are unique. However, Some 'unique'
+## pieces of the genome attract many query sequences. These artifacts
+## are seen across BES, FES and 20kb 454 PE alignments, and should
+## therefore be removed.
 
-Of these 156,485 BES:
-We have alignments for 153,361 BES, i.e. 3,124 or 2% fail to align.
+DF=./depth_filter.plx
 
-After filtering:
-We have alignments for 127,601 BES, i.e. 25,760 or 17% are rejected.
+$DF -d 3 -c .80 \
+  $RESULTS.PairStatus.nr.txt \
+> $RESULTS.PairStatus.nr.txt.dfilt.b.d3.c80
+
+## 08kb
+## This step removes a substantial number of alignments
+wc -l $RESULTS.PairStatus.nr.txt                # 143262
+wc -l $RESULTS.PairStatus.nr.txt.dfilt.b.d3.c80 # 110322
+
+## 20kb
+## This step removes a substantial number of alignments
+wc -l $RESULTS.PairStatus.nr.txt                # 158133
+wc -l $RESULTS.PairStatus.nr.txt.dfilt.b.d3.c80 # 106851
 
 
-The total drop off is 42,619 BES or 25% of the ideal 170,220.
 
 
 
+## Now GFF it
 
-## NOTE! 
-
-Initially, I processed 'hits' from best to worst, allowing a 'bad
-pair' to be skipped over if a lower scoring 'good pair' could be
-found. In total, only 997 lower scoring 'good pairs' could be found
-after the best scoring 'bad pair'. This is just 3% of the 'good pairs'
-(997), and, because they considerable complicate processing, they are
-now simply discarded.
-
+# See ../
 
