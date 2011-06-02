@@ -25,19 +25,18 @@ QUERIES=(
 RESULTS=$BASEDIR/Results/`basename $TARGET .fa`_vs_WGS_454_PE_08kb
 
 
-
 ## 20kb
-# ## The five 20 kb libraries
-# QUERIES=(
-#   $QDIR/F34YKD402.sff
-#   $QDIR/F4M90WV02.sff
-#   $QDIR/F64AD3K01.sff
-#   $QDIR/GBSKQZK02.sff
-#   $QDIR/GBSX3HF01.sff
-# )
+## The five 20 kb libraries
+QUERIES=(
+  $QDIR/F34YKD402.sff
+  $QDIR/F4M90WV02.sff
+  $QDIR/F64AD3K01.sff
+  $QDIR/GBSKQZK02.sff
+  $QDIR/GBSX3HF01.sff
+)
 
-# ## OUTPUT
-# RESULTS=$BASEDIR/Results/`basename $TARGET .fa`_vs_WGS_454_PE_20kb
+## OUTPUT
+RESULTS=$BASEDIR/Results/`basename $TARGET .fa`_vs_WGS_454_PE_20kb
 
 
 
@@ -45,14 +44,14 @@ RESULTS=$BASEDIR/Results/`basename $TARGET .fa`_vs_WGS_454_PE_08kb
 
 # Test(s)
 ls ${QUERIES[@]}
-
+ls -d $RESULTS.*
 
 
 
 
 ## RUN
 
-GSMAPPER=/sw/local/src/dbolser/454/bin/runMapping
+GSMAPPER=~/build/454/bin/runMapping
 
 for QUERY in ${QUERIES[@]}; do
     echo $QUERY
@@ -63,7 +62,7 @@ for QUERY in ${QUERIES[@]}; do
     qsub -q 64bit.q -b y -l ram=10000M \
       -o $RESULTS.$SFF_ID.out \
       -e $RESULTS.$SFF_ID.err \
-    $GSMAPPER -nrm -nobig \
+    $GSMAPPER -nrm -nobig -ml 100 -mi 98 \
       -o $RESULTS.$SFF_ID \
 	 $TARGET $QUERY
 
@@ -97,11 +96,12 @@ rm -f   $RESULTS.*/mapping/*.{qual,fna}
   $RESULTS.*/mapping/454PairStatus.txt \
 > $RESULTS.PairStatus.nr.txt
 
-## 20kb
-wc -l $RESULTS.PairStatus.nr.txt # 180374
-
 ## 08kb
-wc -l $RESULTS.PairStatus.nr.txt # 184381
+wc -l $RESULTS.PairStatus.nr.txt # 143262
+
+## 20kb
+wc -l $RESULTS.PairStatus.nr.txt # 158133
+
 
 
 
@@ -122,14 +122,13 @@ $DF -d 3 -c .80 \
 
 ## 08kb
 ## This step removes a substantial number of alignments
-wc -l $RESULTS.PairStatus.nr.txt                # 184381
-wc -l $RESULTS.PairStatus.nr.txt.dfilt.b.d3.c80 # 155899
+wc -l $RESULTS.PairStatus.nr.txt                # 143262
+wc -l $RESULTS.PairStatus.nr.txt.dfilt.b.d3.c80 # 110322
 
 ## 20kb
 ## This step removes a substantial number of alignments
-wc -l $RESULTS.PairStatus.nr.txt                # 180374
-wc -l $RESULTS.PairStatus.nr.txt.dfilt.b.d5.c80 # 171024
-wc -l $RESULTS.PairStatus.nr.txt.dfilt.b.d3.c80 # 146138
+wc -l $RESULTS.PairStatus.nr.txt                # 158133
+wc -l $RESULTS.PairStatus.nr.txt.dfilt.b.d3.c80 # 106851
 
 
 
@@ -137,8 +136,17 @@ wc -l $RESULTS.PairStatus.nr.txt.dfilt.b.d3.c80 # 146138
 
 ## Now GFF it
 
+# See ../
+
+
+
+## OLD
+
+  -s "dund DM 454 WGS 08kb" \
+
+
 ./to_gff.plx \
-  -s dundee08 \
+  -s "dund DM 454 WGS 20kb" -v \
      $RESULTS.PairStatus.nr.txt.dfilt.b.d3.c80 \
   -t $RESULTS.*/mapping/454TrimStatus.txt \
   -r $RESULTS.*/mapping/454ReadStatus.txt \
@@ -162,7 +170,7 @@ wc -l GFF/`basename $RESULTS`.dfilt.b.d3.c80.gff # 428990
 
 ## NOTE! (out of date, doesn't include HIT repeat filter)
 
-From the 1,686,078 aligned DM WGS 454 PES, there are the same number
+From the 1,686,078 aligned DM 454 WGS PES, there are the same number
 of clones (in theory), as each PES contains both ends of the clone.
 
 Of these 1,686,078 PES:

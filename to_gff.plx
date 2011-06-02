@@ -4,16 +4,16 @@ use strict;
 
 =head1 DESCRIPTION
 
-Thsi script produces GFF from specific 454 PE alignment summaries.
+This script produces GFF from specific 454 PE alignment summaries. The
+script removes very short or very long pairs, so they will never be
+seen!
 
 =cut
 
-
-
 use Getopt::Long;
 
-## Set to 1 to enable debugging output.
-my $verbose = 0;
+## Set the source field, if desired
+my $source_tag = 'dundee';
 
 ## Do we have access to trim file(s)?
 my @trim_files;
@@ -21,19 +21,16 @@ my @trim_files;
 ## How about read file(s)?
 my @read_files;
 
-## Set the source field, if desired
-my $source = 'dundee';
+## Set to 1 to enable debugging output
+my $verbose = 0;
 
-GetOptions(
-	   "v"         => \$verbose,
-	   "trim=s{,}" => \@trim_files,
-	   "read=s{,}" => \@read_files,
-	   "source=s"  => \$source,
-	  )
-  or die "failed to parse command line options!\n";
+GetOptions( "source=s"  => \$source_tag,
+            "v"         => \$verbose,
+            "trim=s{,}" => \@trim_files,
+            "read=s{,}" => \@read_files,
+          )
+  or die "failed to communicate!\n";
 
-warn "$verbose\n"
-  if $verbose > 0;
 
 
 ## We expect to be passed the 454 454PairStatus.txt file(s) for the
@@ -58,6 +55,10 @@ for(@trim_files){
   }
 }
 
+warn "found ", scalar keys %trim_data, "\n"
+  if $verbose > 0;
+
+
 my %read_data;
 for(@read_files){
   warn "Collecting read data from $_\n"
@@ -71,8 +72,6 @@ for(@read_files){
   }
 }
 
-warn "found ", scalar keys %trim_data, "\n"
-  if $verbose > 0;
 warn "found ", scalar keys %read_data, "\n"
   if $verbose > 0;
 
@@ -119,18 +118,17 @@ while(<>){
   if($status eq 'TruePair'){
     print
       join("\t",
-	   $clone, $status, $distance,
-	   $hn1, $hs1, $st1,
-	   $hn2, $hs2, $st2
-	  ), "\n"
-	    if $verbose > 1;
+           $clone, $status, $distance,
+           $hn1, $hs1, $st1,
+           $hn2, $hs2, $st2
+          ), "\n"
+            if $verbose > 1;
     
     ## Determine the direction of the clone on the sequence
     
     my $direction;
     
-    if(0){}
-    elsif($st1 eq '+' && $st2 eq '-'){
+    if(   $st1 eq '+' && $st2 eq '-'){
       ## Sanity check
       die "what 1?\n" if $hs1 > $hs2;
       $direction = +1;
@@ -152,7 +150,7 @@ while(<>){
     
     
     
-    ## Filter clones by CES distance:
+    ## Filter clones by distance:
     
     ## Check their distance
     print "I:\tdistance is $distance\n"
@@ -163,15 +161,15 @@ while(<>){
     
     if ($direction == +1){
       ## OK! Print three lines of GFF
-      print join("\t", $hn1, "$source", 'clone',     $hs1, $he2, $ma0, '+', '.', "ID=$clone;Name=$clone;dist=$distance"), "\n";
-      print join("\t", $hn1, "$source", 'clone end', $hs1, $he1, $ma1, '+', '.', "ID=$clone\_left;Parent=$clone"), "\n";
-      print join("\t", $hn1, "$source", 'clone end', $hs2, $he2, $ma2, '-', '.', "ID=$clone\_right;Parent=$clone"), "\n";
+      print join("\t", $hn1, $source_tag, 'clone',     $hs1, $he2, $ma0, '+', '.', "ID=$clone;Name=$clone;dist=$distance"), "\n";
+      print join("\t", $hn1, $source_tag, 'clone end', $hs1, $he1, $ma1, '+', '.', "ID=$clone\_left;Parent=$clone"), "\n";
+      print join("\t", $hn1, $source_tag, 'clone end', $hs2, $he2, $ma2, '-', '.', "ID=$clone\_right;Parent=$clone"), "\n";
     }
     if ($direction == -1){
       ## OK! Print three lines of GFF
-      print join("\t", $hn1, "$source", 'clone',     $hs2, $he1, $ma0, '-', '.', "ID=$clone;Name=$clone;dist=$distance"), "\n";
-      print join("\t", $hn1, "$source", 'clone end', $hs1, $he1, $ma1, '-', '.', "ID=$clone\_left;Parent=$clone"), "\n";
-      print join("\t", $hn1, "$source", 'clone end', $hs2, $he2, $ma2, '+', '.', "ID=$clone\_right;Parent=$clone"), "\n";
+      print join("\t", $hn1, $source_tag, 'clone',     $hs2, $he1, $ma0, '-', '.', "ID=$clone;Name=$clone;dist=$distance"), "\n";
+      print join("\t", $hn1, $source_tag, 'clone end', $hs1, $he1, $ma1, '-', '.', "ID=$clone\_left;Parent=$clone"), "\n";
+      print join("\t", $hn1, $source_tag, 'clone end', $hs2, $he2, $ma2, '+', '.', "ID=$clone\_right;Parent=$clone"), "\n";
     }
   }
   
@@ -181,11 +179,11 @@ while(<>){
     
     print
       join("\t",
-	   $clone, $status, $distance,
-	   $hn1, $hs1, $st1,
-	   $hn2, $hs2, $st2
-	  ), "\n"
-	    if $verbose > 1;
+           $clone, $status, $distance,
+           $hn1, $hs1, $st1,
+           $hn2, $hs2, $st2
+          ), "\n"
+            if $verbose > 1;
     
     ## Sanity checks
     if($hn1 eq $hn2){
@@ -201,24 +199,24 @@ while(<>){
     ## ONE
     if(0){}
     elsif($st1 eq '+'){
-      print join("\t", $hn1, "${source}x", 'clone',     $hs1, $he1+1000, $ma1, '+', '.', "ID=$clone\_left;Name=$clone\_left;Note=Other end matches $hn2"), "\n";
-      print join("\t", $hn1, "${source}x", 'clone end', $hs1, $he1,      $ma1, '+', '.', "Parent=$clone\_left"), "\n";
+      print join("\t", $hn1, "$source_tag link", 'clone',     $hs1, $he1+1000, $ma1, '+', '.', "ID=$clone\_left;Name=$clone\_left;Note=Other end matches $hn2"), "\n";
+      print join("\t", $hn1, "$source_tag link", 'clone end', $hs1, $he1,      $ma1, '+', '.', "Parent=$clone\_left"), "\n";
     }
     elsif($st1 eq '-'){
-      print join("\t", $hn1, "${source}x", 'clone',     $hs1-1000, $he1, $ma1, '-', '.', "ID=$clone\_left;Name=$clone\_left;Note=Other end matches $hn2"), "\n";
-      print join("\t", $hn1, "${source}x", 'clone end', $hs1,      $he1, $ma1, '-', '.', "Parent=$clone\_left"), "\n";
+      print join("\t", $hn1, "$source_tag link", 'clone',     $hs1-1000, $he1, $ma1, '-', '.', "ID=$clone\_left;Name=$clone\_left;Note=Other end matches $hn2"), "\n";
+      print join("\t", $hn1, "$source_tag link", 'clone end', $hs1,      $he1, $ma1, '-', '.', "Parent=$clone\_left"), "\n";
     }
     else{die}
     
     ## TWO
     if(0){}
     elsif($st2 eq '+'){
-      print join("\t", $hn2, "${source}x", 'clone',     $hs2, $he2+1000, $ma2, '-', '.', "ID=$clone\_right;Name=$clone\_right;Note=Other end matches $hn1"), "\n";
-      print join("\t", $hn2, "${source}x", 'clone end', $hs2, $he2,      $ma2, '+', '.', "Parent=$clone\_right"), "\n";
+      print join("\t", $hn2, "$source_tag link", 'clone',     $hs2, $he2+1000, $ma2, '-', '.', "ID=$clone\_right;Name=$clone\_right;Note=Other end matches $hn1"), "\n";
+      print join("\t", $hn2, "$source_tag link", 'clone end', $hs2, $he2,      $ma2, '+', '.', "Parent=$clone\_right"), "\n";
     }
     elsif($st2 eq '-'){
-      print join("\t", $hn2, "${source}x", 'clone',     $hs2-1000, $he2, $ma2, '+', '.', "ID=$clone\_right;Name=$clone\_right;Note=Other end matches $hn1"), "\n";
-      print join("\t", $hn2, "${source}x", 'clone end', $hs2,      $he2, $ma2, '-', '.', "Parent=$clone\_right"), "\n";
+      print join("\t", $hn2, "$source_tag link", 'clone',     $hs2-1000, $he2, $ma2, '+', '.', "ID=$clone\_right;Name=$clone\_right;Note=Other end matches $hn1"), "\n";
+      print join("\t", $hn2, "$source_tag link", 'clone end', $hs2,      $he2, $ma2, '-', '.', "Parent=$clone\_right"), "\n";
     }
     else{die}
     
