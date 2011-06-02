@@ -1,2 +1,36 @@
+
+## Ignore emacs 'backups'
 *~
 
+## Ignore all symlinks
+Assembly
+Clone_Ends/DM_BES/Assembly
+Clone_Ends/DM_BES/Data
+Clone_Ends/DM_BES/GFF
+Clone_Ends/DM_BES/README
+Clone_Ends/DM_BES/Results
+Clone_Ends/DM_FOS/Assembly
+Clone_Ends/DM_FOS/Data
+Clone_Ends/DM_FOS/GFF
+Clone_Ends/DM_FOS/Results
+Clone_Ends/GFF
+Clone_Ends/RH_BES/Assembly
+Clone_Ends/RH_BES/Data
+Clone_Ends/RH_BES/GFF
+Clone_Ends/RH_BES/README
+Clone_Ends/RH_BES/Results
+Clone_Ends/SL_BES/Assembly
+Clone_Ends/SL_BES/Data
+Clone_Ends/SL_BES/GFF
+Clone_Ends/SL_BES/README
+Clone_Ends/SL_BES/Results
+Clone_Ends/WGS_454_PE/Data
+Clone_Ends/WGS_454_PE/GFF
+Clone_Ends/WGS_454_PE/Results
+GFF
+HTTPD_CONF
+Illumina_reads/
+WGS_454_Assembly-Datema.27.01.2010/
+WGS_454_reads/Assembly
+WGS_454_reads/Data
+WGS_454_reads/Results
