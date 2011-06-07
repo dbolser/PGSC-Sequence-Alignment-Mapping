@@ -154,3 +154,18 @@ bp_seqfeature_load.pl --create \
     \
     GFF/PGSC0003DMB_assembly_landmarks-$SUF.gff \
     GFF/PGSC0003DMB_clone_ends-$SUF.paired.gff
+
+
+
+
+## Package up paired ends for distribution
+
+cd ../
+
+DATE=`date --iso`
+
+tar -zcf dmb3_clone_ends_aligned-$DATE.tar.gz \
+  README \
+  Config/* \
+  Clone_Ends/GFF/PGSC0003DMB_clone_ends-orig.paired.gff
+
