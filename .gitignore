@@ -2,7 +2,12 @@
 ## Ignore emacs 'backups'
 *~
 
+## Ignore this mapping project for the time being
+WGS_454_Assembly-Datema.27.01.2010/
+
 ## Ignore all symlinks
+## find ./ -type l -exec git rm --cached {} \;
+
 Assembly
 Clone_Ends/DM_BES/Assembly
 Clone_Ends/DM_BES/Data
@@ -29,8 +34,8 @@ Clone_Ends/WGS_454_PE/GFF
 Clone_Ends/WGS_454_PE/Results
 GFF
 HTTPD_CONF
-Illumina_reads/
-WGS_454_Assembly-Datema.27.01.2010/
 WGS_454_reads/Assembly
 WGS_454_reads/Data
 WGS_454_reads/Results
+
+
