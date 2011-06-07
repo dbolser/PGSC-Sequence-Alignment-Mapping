@@ -45,8 +45,8 @@ wc -l GFF/PGSC0003DMB_clone_ends/dmb3_dm_bes-orig.gff
 
 # 2) DM_FOS
 
-HEAD=DM_FOS/Data/*.header.tab
-SAHA=DM_FOS/Results/*.dfilt.b.d3.c80
+HEAD=DM_FOS/Data/Solanum_phureja.DM.fosmid_ends.header.tab
+SAHA=DM_FOS/Results/*.dfilt.b1.d3.c80
 
 ll $HEAD $SAHA
 
@@ -117,18 +117,11 @@ wc -l GFF/PGSC0003DMB_clone_ends/dmb3_dm_wgs_454_pe_${X}kb-orig.gff
 
 ## We are now ready to 'pair' the clone ends
 
-for GFF in \
-    GFF/PGSC0003DMB_clone_ends/*-orig.gff; do
-  
-  GFFOUT=GFF/PGSC0003DMB_clone_ends/`basename $GFF .gff`.paired.gff
-  echo $GFF '>' $GFFOUT
-  
-  ./pair_clone_end_gff.plx -m my.mates \
-      $GFF > $GFFOUT
-  
-done
+SUF=orig
 
-
+./pair_clone_end_gff.plx -m my.mates \
+    GFF/PGSC0003DMB_clone_ends/*-$SUF.gff \
+  > GFF/PGSC0003DMB_clone_ends-$SUF.paired.gff
 
 
 
@@ -136,14 +129,13 @@ done
 
 ## See: BiO/Research/Potato/Anchors/Chimerism
 
-SUF=chim.2.1.9
 SUF=beta
-
-SUF=agp.3.0
 
 ./pair_clone_end_gff.plx -m my.mates \
     GFF/PGSC0003DMB_clone_ends-$SUF.gff \
-  > GFF/PGSC0003DMB_clone_ends-$SUF.paired.gff  
+  > GFF/PGSC0003DMB_clone_ends-$SUF.paired.gff
+
+
 
 
 
