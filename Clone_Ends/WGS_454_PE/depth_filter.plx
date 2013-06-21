@@ -5,7 +5,7 @@
 ## report. Alignments within regions above the 'depth threshold' are
 ## discarded.
 
-## NB: blastable format or ssaha format is hard-coded below.
+## NB: This version works on Newbler output.
 
 
 
