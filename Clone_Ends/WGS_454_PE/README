@@ -1,4 +1,3 @@
-
 ## GSMAPPER
 
 BASEDIR=`pwd` # For QSUB
